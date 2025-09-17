@@ -1,0 +1,34 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const usuarioRoutes = require('./routes/usuarios');
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Conectar a MongoDB
+require('dotenv').config();
+mongoose.connect('mongodb://localhost:27017/Fincas');
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'Error de conexión:'));
+db.once('open', () => {
+    console.log('Conectado a MongoDB');
+});
+
+// Rutas de la API (aquí defines todas tus rutas)
+app.use('/usuarios', usuarioRoutes);
+
+// Manejar rutas no definidas (¡ESTE ES EL CAMBIO!)
+// Se coloca después de las rutas, pero antes de app.listen.
+app.use((req, res) => {
+    res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+// Iniciar el servidor
+app.listen(3001, () => {
+    console.log('Servidor corriendo en localhost:3001');
+});
