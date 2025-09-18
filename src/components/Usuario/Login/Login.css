@@ -1,0 +1,29 @@
+/* Estilos generales */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Contenedor del formulario */
+.form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    width: 120px; /* Ancho fijo para todos los labels */
+    text-align: right; /* Alinea el texto a la derecha */
+    margin-right: 10px; /* Separación entre el label y el input */
+}
+
+.form-group input {
+    flex: 1; /* El input ocupa el espacio restante */
+}
+
