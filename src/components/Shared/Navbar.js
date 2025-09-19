@@ -1,31 +1,60 @@
 // src/components/Layout/Navbar.js
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import '../../styles/navbar.css';
 
 const Navbar = () => {
+    const [isGestionMenuOpen, setIsGestionMenuOpen] = useState(false);
+    const [isUsuarioMenuOpen, setIsUsuarioMenuOpen] = useState(false);
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        // Elimina el token de autenticación del almacenamiento local
         localStorage.removeItem('authToken');
-        // Redirige al usuario a la página de login
         navigate('/login');
     };
 
-    return (
-        <nav style={{ display: 'flex', justifyContent: 'space-around', backgroundColor: '#333', padding: '10px' }}>
-            <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>Inicio</Link>
-            <Link to="/profile" style={{ color: 'white', textDecoration: 'none' }}>Perfil</Link>
-            <Link to="/settings" style={{ color: 'white', textDecoration: 'none' }}>Configuración</Link>
+    const toggleGestionMenu = () => {
+        setIsGestionMenuOpen(!isGestionMenuOpen);
+        setIsUsuarioMenuOpen(false); // Cierra el otro menú si está abierto
+    };
 
-            {/* Usa un componente Link para mantener el mismo estilo */}
-            <Link
-                to="/login" // Aunque redirige, el `onClick` se ejecutará primero
-                onClick={handleLogout}
-                style={{ color: 'white', textDecoration: 'none' }}
-            >
-                Cerrar Sesión
-            </Link>
+    const toggleUsuarioMenu = () => {
+        setIsUsuarioMenuOpen(!isUsuarioMenuOpen);
+        setIsGestionMenuOpen(false); // Cierra el otro menú si está abierto
+    };
+
+    return (
+        <nav style={{ display: 'flex', justifyContent: 'flex-start', gap: '20px', backgroundColor: '#333', padding: '10px', position: 'absolute', left: 0, top: 0, width: '100%', zIndex: 1000 }}>
+            <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>Inicio</Link>
+
+            {/* Menú Desplegable de Gestión */}
+            <div style={{ position: 'relative' }}>
+                <Link to="#" onClick={toggleGestionMenu} style={{ color: 'white', textDecoration: 'none' }}>
+                    Gestión
+                </Link>
+                {isGestionMenuOpen && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#444', border: '1px solid #555', zIndex: 10, minWidth: '150px' }}>
+                        <Link to="/propiedades" onClick={() => setIsGestionMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Propiedades</Link>
+                        <Link to="/comunidades" onClick={() => setIsGestionMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Comunidades</Link>
+                        <Link to="/propietarios" onClick={() => setIsGestionMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>Propietarios</Link>
+                    </div>
+                )}
+            </div>
+
+            {/* Menú Desplegable de Usuarios */}
+            <div style={{ position: 'relative' }}>
+                <Link to="#" onClick={toggleUsuarioMenu} style={{ color: 'white', textDecoration: 'none' }}>
+                    Usuarios
+                </Link>
+                {isUsuarioMenuOpen && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#444', border: '1px solid #555', zIndex: 10, minWidth: '150px' }}>
+                        <Link to="/profile" onClick={() => setIsUsuarioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Perfil</Link>
+                        <Link to="/settings" onClick={() => setIsUsuarioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>Configuración</Link>
+                    </div>
+                )}
+            </div>
+
+            <Link to="/login" onClick={handleLogout} style={{ color: 'white', textDecoration: 'none' }}>Cerrar Sesión</Link>
         </nav>
     );
 };

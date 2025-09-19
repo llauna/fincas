@@ -1,0 +1,7 @@
+.navbar {
+    position: relative; /* Asegúrate de que la barra esté posicionada */
+    left: 0; /* Mueve la barra completamente a la izquierda */
+    margin-left: 0; /* Elimina cualquier margen izquierdo */
+    padding-left: 0; /* Elimina cualquier relleno izquierdo */
+    width: 100%; /* Asegúrate de que ocupe todo el ancho */
+}
