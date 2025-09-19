@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Propiedades = () => {
+const Empresa = () => {
     const navigate = useNavigate();
 
     const handleGoBack = () => {
@@ -10,7 +10,7 @@ const Propiedades = () => {
 
     return (
         <div className="container mt-4"> {/* Un contenedor para centrar y añadir margen */}
-            <h1>Vista de Propiedades</h1>
+            <h1>Vista de Empresa</h1>
             <button
                 onClick={handleGoBack}
                 className="btn btn-secondary mt-3" // Clases de Bootstrap
@@ -21,4 +21,4 @@ const Propiedades = () => {
     );
 };
 
-export default Propiedades;
+export default Empresa;
