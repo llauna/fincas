@@ -32,3 +32,13 @@ app.use((req, res) => {
 app.listen(3001, () => {
     console.log('Servidor corriendo en localhost:3001');
 });
+
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    if (email === 'OTR14' && password === '123456') {
+        return res.status(200).json({ token: 'fake-jwt-token' });
+    } else {
+        return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
+});

@@ -5,22 +5,13 @@ const API_URL = 'http://localhost:3001';
 
 class AuthService {
     static async login(email, password) {
-        const response = await axios.post(`${API_URL}/login`, {email, password});
-        const {token} = response.data;
-
-        if (token) {
-            localStorage.setItem('token', token); // Guarda el token en localStorage
+        try {
+            const response = await axios.post(`${API_URL}/login`, { email, password });
+            return response.data;
+        } catch (error) {
+            console.error('Error en la solicitud:', error.response ? error.response.data : error.message);
+            throw error;
         }
-
-        return response.data;
-    }
-
-    static logout() {
-        localStorage.removeItem('token'); // Elimina el token
-    }
-
-    static isAuthenticated() {
-        return !!localStorage.getItem('token'); // Verifica si hay un token
     }
 }
 

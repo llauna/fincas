@@ -30,5 +30,24 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Login de usuario
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const usuario = await Usuario.findOne({ email });
+
+        if (!usuario || usuario.password !== password) {
+            return res.status(401).json({ message: 'Credenciales inválidas' });
+        }
+
+        return res.status(200).json({ token: 'fake-jwt-token', usuario });
+    } catch (error) {
+        console.error('Error en login:', error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
+});
+
+
 module.exports = router;
 

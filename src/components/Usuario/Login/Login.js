@@ -1,8 +1,9 @@
 // components/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthService from '../../../services/AuthService';
+//import AuthService from '../../../services/AuthService';
 import './Login.css';
+import axios from "axios";
 
 
 const Login = () => {
@@ -13,7 +14,8 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            await AuthService.login(email, password); // Llama al servicio de autenticación
+            const response = await axios.post('http://localhost:3001/usuarios/login', { email, password });
+            console.log('Respuesta del servidor: ', response); // Llama al servicio de autenticación
             alert('Inicio de sesión exitoso');
             navigate('/dashboard'); // Redirige al dashboard
         } catch (error) {
