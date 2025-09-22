@@ -1,13 +1,13 @@
 // models/Rol.js
-class Rol {
-    constructor(id, nombre) {
-        this.id = id;
-        this.nombre = nombre;
-    }
+const mongoose = require('mongoose');
 
-    verificarPermisos() {
-        // Lógica para verificar permisos
+const UsuarioSchema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        enum: ['Administrador', 'Propietario', 'Usuario_1', 'Usuario_2'],
+        required: true
     }
-}
+});
 
-export default Rol;
+module.exports = mongoose.model('Usuario', UsuarioSchema);
+

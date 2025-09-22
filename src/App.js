@@ -10,6 +10,7 @@ import Comunidades from "./components/Comunidad/Comunidades";
 import Perfil from "./components/Usuario/Perfil";
 import Configuracion from './components/Usuario/Configuracion';
 import Empresa from './components/Usuario/Empresa';
+import AdministradorFincas from "./components/AdministradorFincas/AdministradorFincas";
 
 
 const App = () => {
@@ -20,7 +21,7 @@ const App = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
 
                 <Route path="/empresa" element={<Empresa />} />
-
+                <Route path="/administradorFincas" element={<AdministradorFincas />} />
                 <Route path="/propiedades" element={<Propiedades />} />
                 <Route path="/propietarios" element={<Propietarios />} />
                 <Route path="/comunidades" element={<Comunidades />} />
