@@ -1,7 +1,11 @@
+//server.js
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const usuarioRoutes = require('./routes/usuarios');
+const propiedadesRouter = require('./routes/propiedades');
+const administradorRouter = require('./routes/administradorFincas');
 
 const app = express();
 
@@ -21,9 +25,10 @@ db.once('open', () => {
 
 // Rutas de la API (aquí defines todas tus rutas)
 app.use('/usuarios', usuarioRoutes);
+app.use('/api/propiedades', propiedadesRouter);
+app.use('/api/administradorfincas', administradorRouter);
 
-// Manejar rutas no definidas (¡ESTE ES EL CAMBIO!)
-// Se coloca después de las rutas, pero antes de app.listen.
+// Manejar rutas no definidas
 app.use((req, res) => {
     res.status(404).json({ error: 'Ruta no encontrada' });
 });
