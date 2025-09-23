@@ -41,7 +41,7 @@ const Navbar = () => {
                     <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#444', border: '1px solid #555', zIndex: 10, minWidth: '150px' }}>
                         <Link to="/empresa" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Empresa</Link>
                         <Link to="/administradorFincas" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Administrador Fincas</Link>
-                        <Link to="/xxx" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>xxx</Link>
+                        <Link to="/Proveedor" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>Proveedor</Link>
                     </div>
                 )}
             </div>

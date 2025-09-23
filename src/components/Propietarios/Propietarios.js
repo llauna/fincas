@@ -1,86 +1,76 @@
-// src/components/Propiedades.jsx
+// src/components/Propietarios
+// src/components/Propietarios/Propietarios.js
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Propiedades = () => {
+const Propietarios = () => {
     const navigate = useNavigate();
-    const [propiedades, setPropiedades] = useState([]);
+    const [propietarios, setPropietarios] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [formData, setFormData] = useState({ nombre: '', email: '', telefono: '' });
+    const [editingId, setEditingId] = useState(null); // Estado para la edición
 
-    // Estado del formulario de propiedades
-    const [formData, setFormData] = useState({
-        idPropietario: '',
-        direccion: '',
-        numero: '',
-        poblacion: '',
-        cp: '',
-        planta: '',
-        coeficiente: ''
-    });
+    const API_URL = 'http://localhost:3001/api/propietarios';
 
-    // Estado para la lista de propietarios disponibles
-    const [propietariosDisponibles, setPropietariosDisponibles] = useState([]);
+    // Función para obtener todos los propietarios
+    const fetchPropietarios = async () => {
+        try {
+            const response = await axios.get(API_URL);
+            setPropietarios(response.data);
+        } catch (error) {
+            console.error('Error al obtener los propietarios:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const API_PROPIEDADES_URL = 'http://localhost:3001/api/propiedades';
-    const API_PROPIETARIOS_URL = 'http://localhost:3001/api/propietarios';
-
-    // Función para obtener todas las propiedades y propietarios
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Obtener propiedades
-                const propiedadesResponse = await axios.get(API_PROPIEDADES_URL);
-                setPropiedades(propiedadesResponse.data);
-
-                // Obtener propietarios disponibles
-                const propietariosResponse = await axios.get(API_PROPIETARIOS_URL);
-                setPropietariosDisponibles(propietariosResponse.data);
-            } catch (error) {
-                console.error('Error al obtener los datos:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
+        fetchPropietarios();
     }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleCrear = async (e) => {
+    // Función para crear o actualizar un propietario
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(API_PROPIEDADES_URL, formData);
-            setFormData({
-                idPropietario: '',
-                direccion: '',
-                numero: '',
-                poblacion: '',
-                cp: '',
-                planta: '',
-                coeficiente: ''
-            }); // Limpiar formulario
-            // Recargar datos
-            const propiedadesResponse = await axios.get(API_PROPIEDADES_URL);
-            setPropiedades(propiedadesResponse.data);
+            if (editingId) {
+                // Si hay un ID de edición, actualiza
+                await axios.put(`${API_URL}/${editingId}`, formData);
+                setEditingId(null); // Desactiva el modo de edición
+            } else {
+                // Si no, crea uno nuevo
+                await axios.post(API_URL, formData);
+            }
+            setFormData({ nombre: '', email: '', telefono: '' }); // Limpia el formulario
+            fetchPropietarios(); // Recarga la lista
         } catch (error) {
-            console.error('Error al guardar la propiedad:', error);
+            console.error('Error al guardar el propietario:', error);
         }
     };
 
-    const handleEliminar = async (id) => {
+    // Función para eliminar un propietario
+    const handleDelete = async (id) => {
         try {
-            await axios.delete(`${API_PROPIEDADES_URL}/${id}`);
-            // Recargar datos
-            const propiedadesResponse = await axios.get(API_PROPIEDADES_URL);
-            setPropiedades(propiedadesResponse.data);
+            await axios.delete(`${API_URL}/${id}`);
+            fetchPropietarios(); // Recarga la lista
         } catch (error) {
-            console.error('Error al eliminar la propiedad:', error);
+            console.error('Error al eliminar el propietario:', error);
         }
+    };
+
+    // Función para activar el modo de edición
+    const handleEdit = (propietario) => {
+        setFormData({
+            nombre: propietario.nombre,
+            email: propietario.email,
+            telefono: propietario.telefono,
+        });
+        setEditingId(propietario._id);
     };
 
     const handleGoBack = () => {
@@ -93,93 +83,82 @@ const Propiedades = () => {
 
     return (
         <div className="container mt-4">
-            <h1>Vista de Propiedades</h1>
+            <h1>Gestión de Propietarios</h1>
 
-            {/* Formulario de creación de propiedades */}
-            <form className="row g-3" onSubmit={handleCrear}>
-                <div className="col-md-2">
-                    <label htmlFor="idPropietario" className="form-label">Propietario</label>
-                    <select
-                        className="form-select"
-                        id="idPropietario"
-                        name="idPropietario"
-                        value={formData.idPropietario}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Seleccione...</option>
-                        {propietariosDisponibles.map((prop) => (
-                            <option key={prop._id} value={prop._id}>
-                                {prop.nombre}
-                            </option>
-                        ))}
-                    </select>
+            {/* Formulario para dar de alta/modificar */}
+            <div className="card my-4">
+                <div className="card-header bg-dark text-white">
+                    {editingId ? 'Editar Propietario' : 'Dar de Alta Nuevo Propietario'}
                 </div>
-                <div className="col-md-2">
-                    <label htmlFor="direccion" className="form-label">Dirección</label>
-                    <input type="text" className="form-control" id="direccion" name="direccion" value={formData.direccion} onChange={handleChange} required />
+                <div className="card-body">
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-3">
+                            <label className="form-label">Nombre</label>
+                            <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} required />
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Email</label>
+                            <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} required />
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Teléfono</label>
+                            <input type="tel" className="form-control" name="telefono" value={formData.telefono} onChange={handleChange} required />
+                        </div>
+                        <button type="submit" className="btn btn-success me-2">
+                            {editingId ? 'Actualizar' : 'Guardar'}
+                        </button>
+                        {editingId && (
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => {
+                                    setEditingId(null);
+                                    setFormData({ nombre: '', email: '', telefono: '' });
+                                }}
+                            >
+                                Cancelar
+                            </button>
+                        )}
+                    </form>
                 </div>
-                <div className="col-md-2">
-                    <label htmlFor="numero" className="form-label">Número</label>
-                    <input type="text" className="form-control" id="numero" name="numero" value={formData.numero} onChange={handleChange} required />
-                </div>
-                <div className="col-md-2">
-                    <label htmlFor="poblacion" className="form-label">Población</label>
-                    <input type="text" className="form-control" id="poblacion" name="poblacion" value={formData.poblacion} onChange={handleChange} required />
-                </div>
-                <div className="col-md-2">
-                    <label htmlFor="cp" className="form-label">CP</label>
-                    <input type="text" className="form-control" id="cp" name="cp" value={formData.cp} onChange={handleChange} required />
-                </div>
-                <div className="col-md-2">
-                    <label htmlFor="planta" className="form-label">Planta</label>
-                    <input type="text" className="form-control" id="planta" name="planta" value={formData.planta} onChange={handleChange} required />
-                </div>
-                <div className="col-md-2">
-                    <label htmlFor="coeficiente" className="form-label">Coeficiente</label>
-                    <input type="number" className="form-control" id="coeficiente" name="coeficiente" value={formData.coeficiente} onChange={handleChange} required step="0.01" />
-                </div>
-                <div className="col-12 mt-3">
-                    <button type="submit" className="btn btn-primary">Crear</button>
-                </div>
-            </form>
+            </div>
 
-            <h2 className="mt-5">Listado de Propiedades</h2>
-            <table className="table table-striped">
+            {/* Tabla para mostrar y gestionar propietarios */}
+            <h2 className="mt-5">Listado de Propietarios</h2>
+            <table className="table table-bordered table-striped">
                 <thead>
                 <tr>
-                    <th>ID Propietario</th>
-                    <th>Dirección</th>
-                    <th>Número</th>
-                    <th>Población</th>
-                    <th>CP</th>
-                    <th>Planta</th>
-                    <th>Coeficiente</th>
-                    <th>Acciones</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Acciones</th> {/* Nueva columna para los botones */}
                 </tr>
                 </thead>
                 <tbody>
-                {propiedades.map(prop => {
-                    const propietario = propietariosDisponibles.find(p => p._id === prop.idPropietario);
-                    const nombrePropietario = propietario ? propietario.nombre : 'Desconocido';
-
-                    return (
-                        <tr key={prop._id}>
-                            <td>{nombrePropietario}</td>
-                            <td>{prop.direccion}</td>
-                            <td>{prop.numero}</td>
-                            <td>{prop.poblacion}</td>
-                            <td>{prop.cp}</td>
-                            <td>{prop.planta}</td>
-                            <td>{prop.coeficiente}</td>
-                            <td>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleEliminar(prop._id)}>Eliminar</button>
-                            </td>
-                        </tr>
-                    );
-                })}
+                {propietarios.map(prop => (
+                    <tr key={prop._id}>
+                        <td>{prop.nombre}</td>
+                        <td>{prop.email}</td>
+                        <td>{prop.telefono}</td>
+                        <td>
+                            <button
+                                className="btn btn-warning btn-sm me-2"
+                                onClick={() => handleEdit(prop)}
+                            >
+                                Editar
+                            </button>
+                            <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => handleDelete(prop._id)}
+                            >
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                ))}
                 </tbody>
             </table>
+
             <button
                 onClick={handleGoBack}
                 className="btn btn-secondary mt-3"
@@ -190,4 +169,4 @@ const Propiedades = () => {
     );
 };
 
-export default Propiedades;
+export default Propietarios;

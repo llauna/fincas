@@ -5,7 +5,7 @@ const ComunidadSchema = new mongoose.Schema({
     direccion:     { type: String, required: true },
     numero:        { type: String, required: true },
     poblacion:     { type: String, required: true },
-    co:            { type: String, required: true },
+    cp:            { type: String, required: true },
     planta:        { type: String, required: true },
     coeficiente:   { type: Number, required: true }
 });

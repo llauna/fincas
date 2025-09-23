@@ -2,6 +2,28 @@
 const express = require('express');
 const router = express.Router();
 const Propietario = require('../models/Propietario');
+const Propiedad = require('../models/Propiedad');
+
+// Eliminar un propietario por ID
+router.delete('/:id', async (req, res) => {
+    try {
+        const propietarioId = req.params.id;
+
+        // Primero, eliminar todas las propiedades asociadas a este propietario
+        await Propiedad.deleteMany({ idPropietario: propietarioId });
+
+        // Luego, eliminar el propietario
+        const propietarioEliminado = await Propietario.findByIdAndDelete(propietarioId);
+
+        if (!propietarioEliminado) {
+            return res.status(404).json({ message: 'Propietario no encontrado' });
+        }
+        res.json({ message: 'Propietario y sus propiedades asociadas han sido eliminados correctamente' });
+    } catch (err) {
+        res.status(500).json({ message: 'Error al eliminar el propietario', err });
+    }
+});
+
 
 // Obtener todos los propietarios
 router.get('/', async (req, res) => {
