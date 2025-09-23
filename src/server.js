@@ -6,6 +6,7 @@ const cors = require('cors');
 const usuarioRoutes = require('./routes/usuarios');
 const propiedadesRouter = require('./routes/propiedades');
 const administradorRouter = require('./routes/administradorFincas');
+const propietariosRouter = require('./routes/propietarios');
 
 const app = express();
 
@@ -25,8 +26,9 @@ db.once('open', () => {
 
 // Rutas de la API (aquí defines todas tus rutas)
 app.use('/usuarios', usuarioRoutes);
-app.use('/api/propiedades', propiedadesRouter);
 app.use('/api/administradorfincas', administradorRouter);
+app.use('/api/propiedades', propiedadesRouter);
+app.use('/api/propietarios', propietariosRouter);
 
 // Manejar rutas no definidas
 app.use((req, res) => {
