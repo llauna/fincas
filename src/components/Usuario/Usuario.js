@@ -1,28 +1,28 @@
+// src/components/Usuario/Usuarios.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Empresa = () => {
+const Usuarios = () => {
     const navigate = useNavigate();
-    const [administradores, setAdministradores] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
-        idComunidad: '', // You may need a way to select the community, e.g., a dropdown.
         nombre: '',
-        telefono: '',
+        rol: '',
         email: '',
-        cif: ''
+        password: '',
     });
 
-    const API_URL = 'http://localhost:3001/api/administradores-fincas';
+    const API_URL = 'http://localhost:3001/api/usuarios';
 
-    // Fetch all 'AdministradorFincas' from the API
-    const fetchAdministradores = async () => {
+    // Fetch all 'Usuario' from the API
+    const fetchUsuarios = async () => {
         try {
             const response = await axios.get(API_URL);
-            setAdministradores(response.data);
+            setUsuarios(response.data);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error fetching users:', error);
         } finally {
             setLoading(false);
         }
@@ -30,7 +30,7 @@ const Empresa = () => {
 
     // This effect runs once when the component mounts to fetch initial data.
     useEffect(() => {
-        fetchAdministradores();
+        fetchUsuarios();
     }, []);
 
     // Handle form input changes
@@ -38,32 +38,31 @@ const Empresa = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Handle form submission to create a new 'AdministradorFincas'
+    // Handle form submission to create a new 'Usuario'
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             await axios.post(API_URL, formData);
             // Reset form and refresh the list
             setFormData({
-                idComunidad: '',
                 nombre: '',
-                telefono: '',
+                rol: '',
                 email: '',
-                cif: ''
+                password: '',
             });
-            fetchAdministradores();
+            fetchUsuarios();
         } catch (error) {
-            console.error('Error saving data:', error);
+            console.error('Error saving user:', error);
         }
     };
 
-    // Handle deletion of an 'AdministradorFincas'
+    // Handle deletion of a 'Usuario'
     const handleDelete = async (id) => {
         try {
             await axios.delete(`${API_URL}/${id}`);
-            fetchAdministradores();
+            fetchUsuarios();
         } catch (error) {
-            console.error('Error deleting data:', error);
+            console.error('Error deleting user:', error);
         }
     };
 
@@ -77,32 +76,30 @@ const Empresa = () => {
 
     return (
         <div className="container mt-4">
-            <h1>Gestión de Administradores de Fincas</h1>
+            <h1>Gestión de Usuarios</h1>
 
-            {/* Form to create a new 'AdministradorFincas' */}
+            {/* Form to create a new 'Usuario' */}
             <div className="card my-4">
                 <div className="card-header bg-dark text-white">
-                    Dar de Alta Nuevo Administrador
+                    Dar de Alta Nuevo Usuario
                 </div>
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
-                        {/* Note: 'idComunidad' is not included in the form below, as it requires
-                           a separate component to select from a list of communities. */}
                         <div className="mb-3">
                             <label className="form-label">Nombre</label>
                             <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} required />
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Teléfono</label>
-                            <input type="text" className="form-control" name="telefono" value={formData.telefono} onChange={handleChange} required />
+                            <label className="form-label">Rol</label>
+                            <input type="text" className="form-control" name="rol" value={formData.rol} onChange={handleChange} required />
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Email</label>
                             <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} required />
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">CIF</label>
-                            <input type="text" className="form-control" name="cif" value={formData.cif} onChange={handleChange} required />
+                            <label className="form-label">Contraseña</label>
+                            <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
                         </div>
                         <button type="submit" className="btn btn-success me-2">
                             Guardar
@@ -111,29 +108,27 @@ const Empresa = () => {
                 </div>
             </div>
 
-            {/* Table to display and manage 'AdministradorFincas' */}
-            <h2 className="mt-5">Listado de Administradores</h2>
+            {/* Table to display and manage 'Usuario' */}
+            <h2 className="mt-5">Listado de Usuarios</h2>
             <table className="table table-bordered table-striped">
                 <thead>
                 <tr>
                     <th>Nombre</th>
-                    <th>Teléfono</th>
+                    <th>Rol</th>
                     <th>Email</th>
-                    <th>CIF</th>
                     <th>Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
-                {administradores.map(admin => (
-                    <tr key={admin._id}>
-                        <td>{admin.nombre}</td>
-                        <td>{admin.telefono}</td>
-                        <td>{admin.email}</td>
-                        <td>{admin.cif}</td>
+                {usuarios.map(usuario => (
+                    <tr key={usuario._id}>
+                        <td>{usuario.nombre}</td>
+                        <td>{usuario.rol}</td>
+                        <td>{usuario.email}</td>
                         <td>
                             <button
                                 className="btn btn-danger btn-sm"
-                                onClick={() => handleDelete(admin._id)}
+                                onClick={() => handleDelete(usuario._id)}
                             >
                                 Eliminar
                             </button>
@@ -153,4 +148,4 @@ const Empresa = () => {
     );
 };
 
-export default Empresa;
+export default Usuarios;

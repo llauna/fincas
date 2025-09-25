@@ -15,13 +15,18 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await axios.post('http://localhost:3001/usuarios/login', { email, password });
-            console.log('Respuesta del servidor: ', response); // Llama al servicio de autenticación
+
+            // Guarda el token en localStorage
+            const token = response.data.token;
+            localStorage.setItem('authToken', token);
+
             alert('Inicio de sesión exitoso');
-            navigate('/dashboard'); // Redirige al dashboard
+            navigate('/dashboard');
         } catch (error) {
             alert('Error al iniciar sesión');
         }
     };
+
 
     return (
         <div className="container d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>

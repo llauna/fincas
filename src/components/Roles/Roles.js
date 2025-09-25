@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Empresa = () => {
+const Roles = () => {
     const navigate = useNavigate();
 
     const handleGoBack = () => {
@@ -10,7 +10,7 @@ const Empresa = () => {
 
     return (
         <div className="container mt-4"> {/* Un contenedor para centrar y añadir margen */}
-            <h1>Vista de Empresa</h1>
+            <h1>Vista de Roles</h1>
             <button
                 onClick={handleGoBack}
                 className="btn btn-secondary mt-3" // Clases de Bootstrap
@@ -21,4 +21,4 @@ const Empresa = () => {
     );
 };
 
-export default Empresa;
+export default Roles;
