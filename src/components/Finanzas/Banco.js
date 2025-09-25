@@ -1,61 +1,120 @@
+// src/components/Finanzas/Bancos.js
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Banco = () => {
+// Función para formatear la cuenta bancaria
+const formatCuenta = (value) => {
+    // 1. Remove all non-alphanumeric characters (including spaces)
+    const cleanedValue = value.replace(/[^a-zA-Z0-9]/g, '');
+
+    // 2. Extrae solo la parte numérica y el "ES" si ya existe
+    const numericPart = cleanedValue.replace(/[^0-9]/g, '');
+    const hasES = cleanedValue.startsWith('ES') || cleanedValue.startsWith('es');
+
+    // 3. Prepara el valor formateado. Si no tiene 'ES' aún, lo agrega.
+    let formattedValue = hasES ? 'ES' : '';
+    let remainingValue = hasES ? numericPart.substring(0) : numericPart;
+
+    // Si el valor no tiene 'ES', lo añadimos y empezamos el formato
+    if (!hasES && remainingValue) {
+        formattedValue += 'ES';
+    } else if (hasES && remainingValue) {
+        // Si ya tiene 'ES', ajustamos el resto del valor
+        remainingValue = numericPart;
+    }
+
+    // 4. Formatea la parte numérica con espacios
+    for (let i = 0; i < remainingValue.length; i++) {
+        // Añade un espacio cada 4 dígitos
+        if (i > 0 && i % 4 === 0) {
+            formattedValue += ' ';
+        }
+        formattedValue += remainingValue[i];
+    }
+
+    // 5. Limita la longitud a 29 caracteres
+    return formattedValue.substring(0, 29);
+};
+
+const Bancos = () => {
     const navigate = useNavigate();
-    const [movimientos, setMovimientos] = useState([]);
+    const [bancos, setBancos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
-        fecha: '',
-        concepto: '',
-        importe: '',
-        tipo: '', // 'Ingreso' o 'Gasto'
+        nombreBanco: '',
+        direccion: '',
+        poblacion: '',
+        cp: '',
+        cuenta: ''
     });
 
-    const API_URL = 'http://localhost:3001/api/banco';
+    const API_URL = 'http://localhost:3001/api/bancos';
 
-    const fetchMovimientos = async () => {
+    const fetchBancos = async () => {
         try {
             const response = await axios.get(API_URL);
-            setMovimientos(response.data);
+            setBancos(response.data);
         } catch (error) {
-            console.error('Error al obtener los movimientos bancarios:', error);
+            console.error('Error al obtener los bancos:', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchMovimientos();
+        fetchBancos();
     }, []);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === 'cuenta') {
+            const formattedValue = formatCuenta(value);
+            setFormData({ ...formData, [name]: formattedValue });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(API_URL, formData);
-            setFormData({ fecha: '', concepto: '', importe: '', tipo: '' });
-            fetchMovimientos();
+            // ✅ CORRECCIÓN CLAVE: Limpiamos la cuenta de espacios y prefijos
+            const cleanedCuenta = formData.cuenta.replace(/[^0-9A-Z]/g, '');
+
+            const dataToSend = {
+                ...formData,
+                cuenta: cleanedCuenta
+            };
+
+            await axios.post(API_URL, dataToSend);
+
+            setFormData({
+                nombreBanco: '',
+                direccion: '',
+                poblacion: '',
+                cp: '',
+                cuenta: ''
+            });
+
+            fetchBancos();
         } catch (error) {
-            console.error('Error al guardar el movimiento bancario:', error);
+            console.error('Error al crear el banco:', error);
         }
     };
 
     const handleDelete = async (id) => {
         try {
             await axios.delete(`${API_URL}/${id}`);
-            fetchMovimientos();
+            fetchBancos();
         } catch (error) {
-            console.error('Error al eliminar el movimiento bancario:', error);
+            console.error('Error al eliminar el banco:', error);
         }
     };
 
     const handleGoBack = () => {
-        navigate(-1);
+        navigate('/dashboard');
     };
 
     if (loading) {
@@ -64,73 +123,70 @@ const Banco = () => {
 
     return (
         <div className="container mt-4">
-            <h1>Gestión de Banco</h1>
-
-            {/* Formulario para dar de alta */}
+            <h1>Gestión de Bancos</h1>
             <div className="card my-4">
                 <div className="card-header bg-dark text-white">
-                    Registrar Nuevo Movimiento Bancario
+                    Registrar Nuevo Banco o Cuenta
                 </div>
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
                         <div className="mb-3">
-                            <label className="form-label">Fecha</label>
-                            <input type="date" className="form-control" name="fecha" value={formData.fecha} onChange={handleChange} required />
+                            <label className="form-label">Nombre del Banco</label>
+                            <input type="text" className="form-control" name="nombreBanco" value={formData.nombreBanco} onChange={handleChange} required />
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Concepto</label>
-                            <input type="text" className="form-control" name="concepto" value={formData.concepto} onChange={handleChange} required />
+                            <label className="form-label">Dirección</label>
+                            <input type="text" className="form-control" name="direccion" value={formData.direccion} onChange={handleChange} required />
+                        </div>
+                        <div className="row">
+                            <div className="col-md-9 mb-3">
+                                <label className="form-label">Población</label>
+                                <input type="text" className="form-control" name="poblacion" value={formData.poblacion} onChange={handleChange} required />
+                            </div>
+                            <div className="col-md-3 mb-3">
+                                <label className="form-label">Cod. Postal</label>
+                                <input type="text" className="form-control" name="cp" value={formData.cp} onChange={handleChange} required maxLength="7" />
+                            </div>
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Importe</label>
-                            <input type="number" step="0.01" className="form-control" name="importe" value={formData.importe} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Tipo</label>
-                            <select className="form-control" name="tipo" value={formData.tipo} onChange={handleChange} required>
-                                <option value="">Seleccione...</option>
-                                <option value="Ingreso">Ingreso</option>
-                                <option value="Gasto">Gasto</option>
-                            </select>
+                            <label className="form-label">Número de Cuenta</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                name="cuenta"
+                                value={formData.cuenta}
+                                onChange={handleChange}
+                                required
+                                maxLength="29"
+                            />
                         </div>
                         <button type="submit" className="btn btn-success me-2">
-                            Guardar
+                            Guardar Banco
                         </button>
                     </form>
                 </div>
             </div>
-
-            {/* Tabla para mostrar y gestionar */}
-            <h2 className="mt-5">Listado de Movimientos Bancarios</h2>
-            <table className="table table-bordered table-striped">
-                <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Concepto</th>
-                    <th>Importe</th>
-                    <th>Tipo</th>
-                    <th>Acciones</th>
-                </tr>
-                </thead>
-                <tbody>
-                {movimientos.map(movimiento => (
-                    <tr key={movimiento._id}>
-                        <td>{new Date(movimiento.fecha).toLocaleDateString()}</td>
-                        <td>{movimiento.concepto}</td>
-                        <td>{movimiento.importe}</td>
-                        <td>{movimiento.tipo}</td>
-                        <td>
+            <h2 className="mt-5">Listado de Bancos</h2>
+            <div className="list-group">
+                {bancos.map(banco => (
+                    <div key={banco._id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{banco.nombreBanco}</strong> - {banco.cuenta}
+                        </div>
+                        <div>
+                            <Link to={`/bancos/${banco._id}`} className="btn btn-info btn-sm me-2">
+                                Ver Movimientos
+                            </Link>
                             <button
                                 className="btn btn-danger btn-sm"
-                                onClick={() => handleDelete(movimiento._id)}
+                                onClick={() => handleDelete(banco._id)}
                             >
                                 Eliminar
                             </button>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 ))}
-                </tbody>
-            </table>
+            </div>
             <button
                 onClick={handleGoBack}
                 className="btn btn-secondary mt-3"
@@ -141,4 +197,4 @@ const Banco = () => {
     );
 };
 
-export default Banco;
+export default Bancos;
