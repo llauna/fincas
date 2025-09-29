@@ -1,5 +1,4 @@
 //server.js
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,6 +6,7 @@ const usuarioRoutes = require('./routes/usuarios');
 const propiedadesRouter = require('./routes/propiedades');
 const administradorRouter = require('./routes/administradorFincas');
 const propietariosRouter = require('./routes/propietarios');
+const bancosRouter = require('./routes/bancos');
 
 const app = express();
 
@@ -29,6 +29,7 @@ app.use('/usuarios', usuarioRoutes);
 app.use('/api/administradorfincas', administradorRouter);
 app.use('/api/propiedades', propiedadesRouter);
 app.use('/api/propietarios', propietariosRouter);
+app.use('/api/bancos', bancosRouter);
 
 // Manejar rutas no definidas
 app.use((req, res) => {

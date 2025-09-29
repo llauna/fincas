@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+
+/* Custom CSS para limitar el ancho de los inputs */
+.input-ancho-largo {
+    max-width: 500px;
+}
+
+.input-ancho-medio {
+    max-width: 350px;
+}

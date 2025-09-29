@@ -2,38 +2,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import '../../styles/bancos.css'
+
+// ✅ URL correcta del backend
+const API_URL = 'http://localhost:3001/api/bancos';
 
 // Función para formatear la cuenta bancaria
 const formatCuenta = (value) => {
-    // 1. Remove all non-alphanumeric characters (including spaces)
     const cleanedValue = value.replace(/[^a-zA-Z0-9]/g, '');
-
-    // 2. Extrae solo la parte numérica y el "ES" si ya existe
     const numericPart = cleanedValue.replace(/[^0-9]/g, '');
     const hasES = cleanedValue.startsWith('ES') || cleanedValue.startsWith('es');
 
-    // 3. Prepara el valor formateado. Si no tiene 'ES' aún, lo agrega.
     let formattedValue = hasES ? 'ES' : '';
     let remainingValue = hasES ? numericPart.substring(0) : numericPart;
 
-    // Si el valor no tiene 'ES', lo añadimos y empezamos el formato
     if (!hasES && remainingValue) {
         formattedValue += 'ES';
     } else if (hasES && remainingValue) {
-        // Si ya tiene 'ES', ajustamos el resto del valor
         remainingValue = numericPart;
     }
 
-    // 4. Formatea la parte numérica con espacios
     for (let i = 0; i < remainingValue.length; i++) {
-        // Añade un espacio cada 4 dígitos
         if (i > 0 && i % 4 === 0) {
             formattedValue += ' ';
         }
         formattedValue += remainingValue[i];
     }
 
-    // 5. Limita la longitud a 29 caracteres
     return formattedValue.substring(0, 29);
 };
 
@@ -41,22 +36,26 @@ const Bancos = () => {
     const navigate = useNavigate();
     const [bancos, setBancos] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         nombreBanco: '',
         direccion: '',
         poblacion: '',
         cp: '',
-        cuenta: ''
+        cuenta: '',
+        saldo: '',
+        descripcion: '',
+        fecha: ''
     });
-
-    const API_URL = 'http://localhost:3001/api/bancos';
 
     const fetchBancos = async () => {
         try {
             const response = await axios.get(API_URL);
             setBancos(response.data);
         } catch (error) {
-            console.error('Error al obtener los bancos:', error);
+            console.error('Error al obtener los bancos:', error.response?.data || error.message);
+            setErrorMsg('No se pudo obtener la lista de bancos');
         } finally {
             setLoading(false);
         }
@@ -68,7 +67,6 @@ const Bancos = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
         if (name === 'cuenta') {
             const formattedValue = formatCuenta(value);
             setFormData({ ...formData, [name]: formattedValue });
@@ -79,28 +77,26 @@ const Bancos = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setErrorMsg('');
         try {
-            // ✅ CORRECCIÓN CLAVE: Limpiamos la cuenta de espacios y prefijos
             const cleanedCuenta = formData.cuenta.replace(/[^0-9A-Z]/g, '');
-
-            const dataToSend = {
-                ...formData,
-                cuenta: cleanedCuenta
-            };
-
+            const dataToSend = { ...formData, cuenta: cleanedCuenta };
             await axios.post(API_URL, dataToSend);
-
             setFormData({
                 nombreBanco: '',
                 direccion: '',
                 poblacion: '',
                 cp: '',
-                cuenta: ''
+                cuenta: '',
+                saldo: '',
+                descripcion: '',
+                fecha: ''
             });
-
             fetchBancos();
+            setShowModal(false); // cerrar modal al guardar
         } catch (error) {
-            console.error('Error al crear el banco:', error);
+            console.error('Error al crear el banco:', error.response?.data || error.message);
+            setErrorMsg(error.response?.data?.message || 'Error al crear el banco');
         }
     };
 
@@ -109,7 +105,7 @@ const Bancos = () => {
             await axios.delete(`${API_URL}/${id}`);
             fetchBancos();
         } catch (error) {
-            console.error('Error al eliminar el banco:', error);
+            console.error('Error al eliminar el banco:', error.response?.data || error.message);
         }
     };
 
@@ -118,83 +114,122 @@ const Bancos = () => {
     };
 
     if (loading) {
-        return <div className="container mt-4">Cargando...</div>;
+        return <div className="text-center py-5">Cargando...</div>;
     }
 
     return (
-        <div className="container mt-4">
-            <h1>Gestión de Bancos</h1>
-            <div className="card my-4">
-                <div className="card-header bg-dark text-white">
-                    Registrar Nuevo Banco o Cuenta
-                </div>
-                <div className="card-body">
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label className="form-label">Nombre del Banco</label>
-                            <input type="text" className="form-control" name="nombreBanco" value={formData.nombreBanco} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Dirección</label>
-                            <input type="text" className="form-control" name="direccion" value={formData.direccion} onChange={handleChange} required />
-                        </div>
-                        <div className="row">
-                            <div className="col-md-9 mb-3">
-                                <label className="form-label">Población</label>
-                                <input type="text" className="form-control" name="poblacion" value={formData.poblacion} onChange={handleChange} required />
-                            </div>
-                            <div className="col-md-3 mb-3">
-                                <label className="form-label">Cod. Postal</label>
-                                <input type="text" className="form-control" name="cp" value={formData.cp} onChange={handleChange} required maxLength="7" />
-                            </div>
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Número de Cuenta</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                name="cuenta"
-                                value={formData.cuenta}
-                                onChange={handleChange}
-                                required
-                                maxLength="29"
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-success me-2">
-                            Guardar Banco
-                        </button>
-                    </form>
-                </div>
+        <div className="container py-4">
+            <h1 className="mb-4 text-center">Gestión de Bancos</h1>
+
+            {/* Botón para abrir modal */}
+            <div className="text-center mb-4">
+                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                    ➕ Registrar Nuevo Banco
+                </button>
             </div>
-            <h2 className="mt-5">Listado de Bancos</h2>
-            <div className="list-group">
-                {bancos.map(banco => (
-                    <div key={banco._id} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{banco.nombreBanco}</strong> - {banco.cuenta}
-                        </div>
-                        <div>
-                            <Link to={`/bancos/${banco._id}`} className="btn btn-info btn-sm me-2">
-                                Ver Movimientos
-                            </Link>
-                            <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleDelete(banco._id)}
-                            >
-                                Eliminar
-                            </button>
+
+            {/* Fondo oscuro */}
+            {showModal && <div className="custom-modal-backdrop" onClick={() => setShowModal(false)}></div>}
+
+            {/* Modal con animación */}
+            {showModal && (
+                <div className="modal fade show custom-modal" style={{ display: 'block' }} tabIndex="-1">
+                    <div className="modal-dialog modal-lg">
+                        <div className="modal-content">
+                            <div className="modal-header bg-primary text-white">
+                                <h5 className="modal-title">Registrar Nuevo Banco</h5>
+                                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                {errorMsg && <div className="alert alert-danger">{errorMsg}</div>}
+                                <form onSubmit={handleSubmit} noValidate>
+                                    <div className="row">
+                                        <div className="col-md-6 mb-3">
+                                            <label htmlFor="nombreBanco" className="form-label">Nombre del Banco</label>
+                                            <input type="text" className="form-control" id="nombreBanco" name="nombreBanco" value={formData.nombreBanco} onChange={handleChange} required />
+                                        </div>
+                                        <div className="col-md-6 mb-3">
+                                            <label htmlFor="direccion" className="form-label">Dirección</label>
+                                            <input type="text" className="form-control" id="direccion" name="direccion" value={formData.direccion} onChange={handleChange} required />
+                                        </div>
+                                    </div>
+
+                                    <div className="row">
+                                        <div className="col-md-8 mb-3">
+                                            <label htmlFor="poblacion" className="form-label">Población</label>
+                                            <input type="text" className="form-control" id="poblacion" name="poblacion" value={formData.poblacion} onChange={handleChange} required />
+                                        </div>
+                                        <div className="col-md-4 mb-3">
+                                            <label htmlFor="cp" className="form-label">Código Postal</label>
+                                            <input type="text" className="form-control input-small" id="cp" name="cp" value={formData.cp} onChange={handleChange} required maxLength="7" />
+                                        </div>
+                                    </div>
+
+                                    <div className="row">
+                                        <div className="col-md-8 mb-3">
+                                            <label htmlFor="cuenta" className="form-label">Número de Cuenta</label>
+                                            <input type="text" className="form-control" id="cuenta" name="cuenta" value={formData.cuenta} onChange={handleChange} required maxLength="29" />
+                                        </div>
+                                        <div className="col-md-4 mb-3">
+                                            <label htmlFor="saldo" className="form-label">Saldo inicial</label>
+                                            <input type="number" className="form-control" id="saldo" name="saldo" value={formData.saldo} onChange={handleChange} required />
+                                        </div>
+                                    </div>
+
+                                    <div className="row">
+                                        <div className="col-md-8 mb-3">
+                                            <label htmlFor="descripcion" className="form-label">Descripción</label>
+                                            <input type="text" className="form-control" id="descripcion" name="descripcion" value={formData.descripcion} onChange={handleChange} required />
+                                        </div>
+                                        <div className="col-md-4 mb-3">
+                                            <label htmlFor="fecha" className="form-label">Fecha</label>
+                                            <input type="date" className="form-control" id="fecha" name="fecha" value={formData.fecha} onChange={handleChange} required />
+                                        </div>
+                                    </div>
+
+                                    <div className="d-flex justify-content-end">
+                                        <button type="submit" className="btn btn-primary">💾 Guardar Banco</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                ))}
+                </div>
+            )}
+
+            {/* Listado de Bancos */}
+            <h2 className="mb-3 text-center">Listado de Bancos</h2>
+            <div className="listado-bancos">
+                <div className="row">
+                    {bancos.map(banco => (
+                        <div key={banco._id} className="col-12 col-md-6 mb-3">
+                            <div className="card h-100 shadow-sm">
+                                <div className="card-body">
+                                    <h5 className="card-title">{banco.nombreBanco}</h5>
+                                    <h6 className="card-subtitle mb-2 text-muted">{banco.cuenta}</h6>
+                                    <p className="card-text">{banco.direccion}, {banco.poblacion} ({banco.cp})</p>
+                                    <p className="card-text"><strong>Saldo:</strong> {banco.saldo}</p>
+                                    <p className="card-text"><strong>Descripción:</strong> {banco.descripcion}</p>
+                                    <p className="card-text"><strong>Fecha:</strong> {new Date(banco.fecha).toLocaleDateString()}</p>
+                                </div>
+                                <div className="card-footer d-flex justify-content-between">
+                                    <Link to={`/bancos/${banco._id}`} className="btn btn-outline-primary btn-sm">Ver Movimientos</Link>
+                                    <button onClick={() => handleDelete(banco._id)} className="btn btn-outline-danger btn-sm">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-            <button
-                onClick={handleGoBack}
-                className="btn btn-secondary mt-3"
-            >
-                Volver
-            </button>
+
+
+            {/* Botón volver */}
+            <div className="text-center mt-4">
+                <button onClick={handleGoBack} className="btn btn-secondary">Volver</button>
+            </div>
         </div>
     );
 };
 
 export default Bancos;
+

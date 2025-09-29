@@ -1,7 +1,7 @@
 // src/routes/bancos.js
 const express = require('express');
 const router = express.Router();
-const Banco = require('../models/Bancos');
+const Banco = require('../models/Banco');
 
 // Obtener todos los bancos
 router.get('/', async (req, res) => {
@@ -16,37 +16,37 @@ router.get('/', async (req, res) => {
 // Crear un nuevo banco
 router.post('/', async (req, res) => {
     try {
-        const nuevoBanco = new Proveedor(req.body);
-        const proveedorGuardado = await nuevoProveedor.save();
-        res.status(201).json(proveedorGuardado);
+        const nuevoBanco = new Banco(req.body);
+        const bancoGuardado = await nuevoBanco.save();
+        res.status(201).json(bancoGuardado);
     } catch (err) {
         res.status(500).json({ message: 'Error al crear el Banco', err });
     }
 });
 
-// Actualizar un proveedor por ID
+// Actualizar un banco por ID
 router.put('/:id', async (req, res) => {
     try {
-        const proveedorActualizado = await Proveedor.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!proveedorActualizado) {
-            return res.status(404).json({ message: 'Proveedor no encontrado' });
+        const bancoActualizado = await Banco.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!bancoActualizado) {
+            return res.status(404).json({ message: 'Banco no encontrado' });
         }
-        res.json(proveedorActualizado);
+        res.json(bancoActualizado);
     } catch (err) {
-        res.status(500).json({ message: 'Error al actualizar proveedor', err });
+        res.status(500).json({ message: 'Error al actualizar banco', err });
     }
 });
 
-// Eliminar un proveedor por ID
+// Eliminar un banco por ID
 router.delete('/:id', async (req, res) => {
     try {
-        const proveedorEliminado = await Proveedor.findByIdAndDelete(req.params.id);
-        if (!proveedorEliminado) {
-            return res.status(404).json({ message: 'Proveedor no encontrado' });
+        const bancoEliminado = await Banco.findByIdAndDelete(req.params.id);
+        if (!bancoEliminado) {
+            return res.status(404).json({ message: 'Banco no encontrado' });
         }
-        res.json({ message: 'Proveedor eliminado correctamente' });
+        res.json({ message: 'Banco eliminado correctamente' });
     } catch (err) {
-        res.status(500).json({ message: 'Error al eliminar proveedor', err });
+        res.status(500).json({ message: 'Error al eliminar banco', err });
     }
 });
 
