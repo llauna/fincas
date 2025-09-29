@@ -13,6 +13,17 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/:bancoId', async (req, res) => {
+    try {
+        console.log("📌 ID recibido en backend:", req.params.bancoId); // ✅ Verificación
+        const banco = await Banco.findById(req.params.bancoId);
+        if (!banco) return res.status(404).json({ message: 'Banco no encontrado' });
+        res.json(banco);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener el banco' });
+    }
+});
+
 // Crear un nuevo banco
 router.post('/', async (req, res) => {
     try {

@@ -3,7 +3,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Usuario/Login/Login';
 import Dashboard from './components/Usuario/Login/Dashboard';
-//import PrivateRoute from './components/Usuario/PrivateRoute';
 import Propiedades from "./components/Propiedades/Propiedades";
 import Propietarios from "./components/Propietarios/Propietarios";
 import Comunidades from "./components/Comunidad/Comunidades";
@@ -14,6 +13,7 @@ import Configuracion from './components/Usuario/Configuracion';
 import Empresa from './components/Empresa/Empresa';
 import AdministradorFincas from "./components/AdministradorFincas/AdministradorFincas";
 import Banco from './components/Finanzas/Banco';
+import Movimientos from './components/Finanzas/Movimientos';
 import Caja from './components/Finanzas/Caja';
 
 
@@ -33,6 +33,9 @@ const App = () => {
                 <Route path="/roles" element={<Roles />} />
                 <Route path="/configuracion" element={<Configuracion />} />
                 <Route path="/banco" element={<Banco />} />
+
+                <Route path="/movimientos" element={<Movimientos />} />
+                <Route path="/movimientos/:bancoId" element={<Movimientos />} />
                 <Route path="/caja" element={<Caja />} />
                 <Route path="*" element={<Navigate to="/login" />} />
             </Routes>
