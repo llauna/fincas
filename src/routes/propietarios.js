@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const Propietario = require('../models/Propietario');
 const Propiedad = require('../models/Propiedad');
+//const AdministradorFincas = require('../models/AdministradorFincas');
 
 // Eliminar un propietario por ID
 router.delete('/:id', async (req, res) => {
@@ -36,13 +37,30 @@ router.get('/', async (req, res) => {
 });
 
 // Crear un nuevo propietario
-router.post('/', async (req, res) => {
+router.post('/:idPropietario/unir-comunidad/:idComunidad', async (req, res) => {
     try {
-        const nuevoPropietario = new Propietario(req.body);
-        const propietarioGuardado = await nuevoPropietario.save();
-        res.status(201).json(propietarioGuardado);
-    } catch (err) {
-        res.status(500).json({ message: 'Error al crear propietario', err });
+        const propietario = await Propietario.findById(req.params.idPropietario);
+        const comunidad = await Comunidad.findById(req.params.idComunidad);
+
+        if (!propietario || !comunidad) {
+            return res.status(404).json({ message: 'Propietario o comunidad no encontrada' });
+        }
+
+        // Añadir comunidad al propietario
+        if (!propietario.comunidades.includes(comunidad._id)) {
+            propietario.comunidades.push(comunidad._id);
+            await propietario.save();
+        }
+
+        // Añadir propietario a la comunidad
+        if (!comunidad.propietarios.includes(propietario._id)) {
+            comunidad.propietarios.push(propietario._id);
+            await comunidad.save();
+        }
+
+        res.json({ message: 'Propietario unido a comunidad correctamente' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al unir propietario a comunidad', error: error.message });
     }
 });
 
@@ -69,6 +87,18 @@ router.delete('/:id', async (req, res) => {
         res.json({ message: 'Propietario eliminado correctamente' });
     } catch (err) {
         res.status(500).json({ message: 'Error al eliminar propietario', err });
+    }
+});
+
+// Crear un nuevo propietario
+router.post('/', async (req, res) => {
+    try {
+        const nuevoPropietario = new Propietario(req.body);
+        await nuevoPropietario.save();
+        res.status(201).json(nuevoPropietario);
+    } catch (error) {
+        console.error('Error al crear propietario:', error);
+        res.status(500).json({ message: 'Error al crear propietario', error: error.message });
     }
 });
 

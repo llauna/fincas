@@ -5,47 +5,65 @@ import axios from 'axios';
 const Empresa = () => {
     const navigate = useNavigate();
     const [administradores, setAdministradores] = useState([]);
+    const [comunidades, setComunidades] = useState([]);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
-        idComunidad: '', // You may need a way to select the community, e.g., a dropdown.
+        idComunidades: [],
         nombre: '',
         telefono: '',
         email: '',
         cif: ''
     });
 
-    const API_URL = 'http://localhost:3001/api/administradores-fincas';
+    // URLs del backend
+    const API_EMPRESAS = 'http://localhost:3001/api/administradorFincas';
+    const API_COMUNIDADES = 'http://localhost:3001/api/comunidades';
 
-    // Fetch all 'AdministradorFincas' from the API
+    // Obtener empresas
     const fetchAdministradores = async () => {
         try {
-            const response = await axios.get(API_URL);
+            const response = await axios.get(API_EMPRESAS);
             setAdministradores(response.data);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error fetching empresas:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    // This effect runs once when the component mounts to fetch initial data.
+    // Obtener comunidades
+    const fetchComunidades = async () => {
+        try {
+            const response = await axios.get(API_COMUNIDADES);
+            setComunidades(response.data);
+        } catch (error) {
+            console.error('Error fetching comunidades:', error);
+        }
+    };
+
     useEffect(() => {
         fetchAdministradores();
+        fetchComunidades();
     }, []);
 
-    // Handle form input changes
+    // Manejar cambios en inputs normales
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Handle form submission to create a new 'AdministradorFincas'
+    // Manejar cambios en selección múltiple de comunidades
+    const handleChangeComunidades = (e) => {
+        const selectedOptions = Array.from(e.target.selectedOptions).map(opt => opt.value);
+        setFormData({ ...formData, idComunidades: selectedOptions });
+    };
+
+    // Guardar empresa
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(API_URL, formData);
-            // Reset form and refresh the list
+            await axios.post(API_EMPRESAS, formData);
             setFormData({
-                idComunidad: '',
+                idComunidades: [],
                 nombre: '',
                 telefono: '',
                 email: '',
@@ -53,17 +71,17 @@ const Empresa = () => {
             });
             fetchAdministradores();
         } catch (error) {
-            console.error('Error saving data:', error);
+            console.error('Error saving empresa:', error.response?.data || error.message);
         }
     };
 
-    // Handle deletion of an 'AdministradorFincas'
+    // Eliminar empresa
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`${API_URL}/${id}`);
+            await axios.delete(`${API_EMPRESAS}/${id}`);
             fetchAdministradores();
         } catch (error) {
-            console.error('Error deleting data:', error);
+            console.error('Error deleting empresa:', error);
         }
     };
 
@@ -77,17 +95,35 @@ const Empresa = () => {
 
     return (
         <div className="container mt-4">
-            <h1>Gestión de Administradores de Fincas</h1>
+            <h1>Información Empresa</h1>
 
-            {/* Form to create a new 'AdministradorFincas' */}
+            {/* Formulario */}
             <div className="card my-4">
                 <div className="card-header bg-dark text-white">
-                    Dar de Alta Nuevo Administrador
+                    Alta Nueva Empresa
                 </div>
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
-                        {/* Note: 'idComunidad' is not included in the form below, as it requires
-                           a separate component to select from a list of communities. */}
+                        <div className="mb-3">
+                            <label className="form-label">Comunidades</label>
+                            <select
+                                className="form-control"
+                                name="idComunidades"
+                                value={formData.idComunidades}
+                                onChange={handleChangeComunidades}
+                                multiple
+                                required
+                            >
+                                {comunidades.map(com => (
+                                    <option key={com._id} value={com._id}>
+                                        {com.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                            <small className="text-muted">
+                                Mantén presionada CTRL (Windows) o CMD (Mac) para seleccionar varias.
+                            </small>
+                        </div>
                         <div className="mb-3">
                             <label className="form-label">Nombre</label>
                             <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} required />
@@ -111,11 +147,12 @@ const Empresa = () => {
                 </div>
             </div>
 
-            {/* Table to display and manage 'AdministradorFincas' */}
-            <h2 className="mt-5">Listado de Administradores</h2>
+            {/* Tabla */}
+            <h2 className="mt-5">Listado de Empresas</h2>
             <table className="table table-bordered table-striped">
                 <thead>
                 <tr>
+                    <th>Comunidades</th>
                     <th>Nombre</th>
                     <th>Teléfono</th>
                     <th>Email</th>
@@ -126,6 +163,7 @@ const Empresa = () => {
                 <tbody>
                 {administradores.map(admin => (
                     <tr key={admin._id}>
+                        <td>{admin.comunidades?.map(c => c.nombre).join(', ') || 'Sin comunidades'}</td>
                         <td>{admin.nombre}</td>
                         <td>{admin.telefono}</td>
                         <td>{admin.email}</td>

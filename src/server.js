@@ -2,12 +2,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+
 const usuarioRoutes = require('./routes/usuarios');
 const propiedadesRouter = require('./routes/propiedades');
 const administradorRouter = require('./routes/administradorFincas');
 const propietariosRouter = require('./routes/propietarios');
 const bancosRouter = require('./routes/bancos');
 const movimientosRoutes = require('./routes/movimientos');
+const comunidadesRouter = require('./routes/comunidades');
 
 const app = express();
 
@@ -32,6 +34,8 @@ app.use('/api/propiedades', propiedadesRouter);
 app.use('/api/propietarios', propietariosRouter);
 app.use('/api/bancos', bancosRouter);
 app.use('/api/movimientos', movimientosRoutes);
+app.use('/api/comunidades', comunidadesRouter);
+
 
 // Manejar rutas no definidas
 app.use((req, res) => {

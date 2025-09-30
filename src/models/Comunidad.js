@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 
 const ComunidadSchema = new mongoose.Schema({
-    idPropietario: { type: mongoose.Schema.Types.ObjectId, ref: 'Propietario', required: true },
-    direccion:     { type: String, required: true },
-    numero:        { type: String, required: true },
-    poblacion:     { type: String, required: true },
-    cp:            { type: String, required: true },
-    planta:        { type: String, required: true },
-    coeficiente:   { type: Number, required: true }
-});
+    nombre: { type: String, required: true },
+    direccion: { type: String },
+    poblacion: { type: String },
+    cp: { type: String },
+    provincia: { type: String },
+    propietarios: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Propietario' }]
+}, { timestamps: true });
 
 module.exports = mongoose.model('Comunidad', ComunidadSchema);
+
+

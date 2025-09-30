@@ -71,7 +71,7 @@ const Comunidades = () => {
             {/* Formulario para dar de alta */}
             <div className="card my-4">
                 <div className="card-header bg-dark text-white">
-                    Dar de Alta Nueva Comunidad
+                    Alta Comunidad
                 </div>
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>

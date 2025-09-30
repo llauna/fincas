@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 
-const AdministradorFincasSchema = new mongoose.Schema({
-    idComunidad: { type: mongoose.Schema.Types.ObjectId, ref: 'Comunidad', required: true },
-    nombre:      { type: String, required: true },
-    telefono:    { type: String, required: true },
-    email:       { type: String, required: true, unique: true },
-    cif:         { type: String, required: true, unique: true }
-});
+const EmpresaSchema = new mongoose.Schema({
+    nombre: { type: String, required: true },
+    telefono: { type: String },
+    email: { type: String },
+    cif: { type: String },
+    comunidades: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comunidad' }],
+    propietarios: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Propietario' }]
+}, { timestamps: true });
 
-module.exports = mongoose.model('AdministradorFincas', AdministradorFincasSchema);
+module.exports = mongoose.model('Empresa', EmpresaSchema);
+

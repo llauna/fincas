@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // La URL de tu API para los administradores de fincas.
 // Asegúrate de que esta ruta coincida con la que definirás en tu backend.
-const API_URL = 'http://localhost:3001/api/administradorfincas';
+const API_URL = 'http://localhost:3001/api/administradorFincas';
 
 // Obtener todos los administradores de fincas
 export const getAdministradoresFincas = async () => {

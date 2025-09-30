@@ -64,7 +64,7 @@ const AdministradorFincas = () => {
 
     return (
         <div className="container mt-4">
-            <h1 className="mb-4">Gestión de Administradores de Fincas</h1>
+            <h1 className="mb-4">Información Empresa</h1>
             <form className="row g-3 mb-4" onSubmit={handleSubmit}>
                 <div className="col-md-4">
                     <input className="form-control" name="idComunidad" placeholder="ID Comunidad" value={form.idComunidad} onChange={handleChange} required />
