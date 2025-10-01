@@ -1,8 +1,6 @@
-// src/components/Propietarios
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// reutilizamos los estilos del modal
 import '../../styles/propiedades.css';
 
 const Propietarios = () => {
@@ -11,15 +9,23 @@ const Propietarios = () => {
     const [empresas, setEmpresas] = useState([]);
     const [comunidades, setComunidades] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Estados para el Modal de Alta/Edición
     const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false); // Indica si estamos editando
+    const [editingPropietarioId, setEditingPropietarioId] = useState(null); // ID del propietario a editar
     const [formSubmitError, setFormSubmitError] = useState('');
+
+    // Estados para el Modal de Gestión de Comunidades
+    const [showManagementModal, setShowManagementModal] = useState(false);
+    const [propietarioComunidades, setPropietarioComunidades] = useState(null);
 
     const [formData, setFormData] = useState({
         nombre: '',
         telefono: '',
         email: '',
         gestorFinca: '',
-        comunidades: [] // Contiene IDs de comunidades seleccionadas en el modal
+        comunidades: []
     });
 
     // URLs del backend
@@ -60,9 +66,8 @@ const Propietarios = () => {
         setFormData({ ...formData, comunidades: selectedOptions });
     };
 
-    // --- FUNCIONES DE RESETEO Y MODAL ---
+    // --- FUNCIONES DE RESETEO Y MODAL PRINCIPAL ---
 
-    // 1. FUNCIÓN PARA LIMPIAR LOS DATOS DEL FORMULARIO Y EL ERROR
     const resetForm = () => {
         setFormData({
             nombre: '',
@@ -72,77 +77,116 @@ const Propietarios = () => {
             comunidades: []
         });
         setFormSubmitError('');
+        setIsEditing(false);
+        setEditingPropietarioId(null);
     };
 
-    // 2. FUNCIÓN PARA CERRAR EL MODAL Y RESETEAR
     const handleCloseModal = () => {
         setShowModal(false);
         resetForm();
     };
 
+    // --- LÓGICA DE EDICIÓN (PRECarga del Formulario) ---
+
+    const handleEdit = (id) => {
+        const propietarioToEdit = propietarios.find(p => p._id === id);
+        if (propietarioToEdit) {
+
+            // 1. Preparar las comunidades: Mapear para asegurar que solo haya IDs válidas
+            const comunidadesIDs = propietarioToEdit.comunidades
+                ? propietarioToEdit.comunidades.map(c => c._id || c)
+                : [];
+
+            // 2. Precargar formData
+            setFormData({
+                _id: propietarioToEdit._id,
+                nombre: propietarioToEdit.nombre,
+                telefono: propietarioToEdit.telefono,
+                email: propietarioToEdit.email,
+                gestorFinca: propietarioToEdit.gestorFinca || '',
+                comunidades: comunidadesIDs
+            });
+
+            // 3. Activar el modo edición y abrir el modal
+            setIsEditing(true);
+            setEditingPropietarioId(id);
+            setShowModal(true);
+        } else {
+            console.error(`Propietario con ID ${id} no encontrado.`);
+        }
+    };
+
     // --- FUNCIÓN PRINCIPAL DE GUARDADO/ACTUALIZACIÓN ---
 
-    // 3. FUNCIÓN MODIFICADA: Ahora maneja la lógica de Crear (POST) o Actualizar (PUT)
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormSubmitError('');
 
-        // 1. Detección de Existencia
-        const emailIngresado = formData.email.trim().toLowerCase();
-        const propietarioExistente = propietarios.find(p =>
-            p.email && p.email.toLowerCase() === emailIngresado
-        );
-
         let url = API_PROPIETARIOS;
         let method = 'post';
-        let dataToSend = formData; // Objeto de datos que finalmente se enviará
+        let dataToSend = formData;
+        let actionType = 'crear';
 
-        if (propietarioExistente) {
-            // Modo ACTUALIZACIÓN (PUT)
-            url = `${API_PROPIETARIOS}/${propietarioExistente._id}`;
+        // Lógica de Edición o Creación (incluyendo detección de duplicados al crear)
+        if (isEditing) {
+            // Caso 1: EDICIÓN (PUT). No se necesita buscar duplicado.
+            url = `${API_PROPIETARIOS}/${editingPropietarioId}`;
             method = 'put';
+            actionType = 'actualizar';
 
-            // 🔑 LÓGICA DE FUSIÓN PARA EVITAR SOBRESCRIBIR COMUNIDADES EXISTENTES
+            // Aquí no se requiere fusión, el modal de edición reemplaza las comunidades seleccionadas.
+            // Si el usuario quiere mantener las viejas, debe seleccionarlas de nuevo.
+            // Si quieres que las mantenga por defecto, tendrías que precargar el select.
+            // Por ahora, asumimos que el modal de edición define el nuevo conjunto.
 
-            // Obtener las IDs de las comunidades que *ya tiene* el propietario
-            const comunidadesExistentesIDs = propietarioExistente.comunidades
-                ? propietarioExistente.comunidades.map(c => c._id || c) // Obtener solo IDs
-                : [];
+        } else {
+            // Caso 2: CREACIÓN (POST). Comprobamos duplicado para cambiar a PUT.
+            const emailIngresado = formData.email.trim().toLowerCase();
+            const propietarioExistente = propietarios.find(p =>
+                p.email && p.email.toLowerCase() === emailIngresado
+            );
 
-            // Obtener las IDs de las comunidades *seleccionadas en el modal*
-            const comunidadesNuevasIDs = formData.comunidades;
+            if (propietarioExistente) {
+                // Modo ACTUALIZACIÓN por duplicidad
+                url = `${API_PROPIETARIOS}/${propietarioExistente._id}`;
+                method = 'put';
+                actionType = 'actualizar';
 
-            // FUSIONAR: Combinar ambas listas y eliminar duplicados (usando un Set)
-            // IMPORTANTE: Convertimos el Set de nuevo a un Array para enviarlo al backend
-            const comunidadesFusionadas = Array.from(new Set([...comunidadesExistentesIDs, ...comunidadesNuevasIDs]));
+                // LÓGICA DE FUSIÓN (porque el usuario NO estaba en modo edición)
+                const comunidadesExistentesIDs = propietarioExistente.comunidades
+                    ? propietarioExistente.comunidades.map(c => c._id || c)
+                    : [];
 
-            // Actualizar el objeto a enviar con el array fusionado
-            dataToSend = {
-                ...formData,
-                comunidades: comunidadesFusionadas
-            };
+                const comunidadesNuevasIDs = formData.comunidades;
+
+                const comunidadesFusionadas = Array.from(new Set([...comunidadesExistentesIDs, ...comunidadesNuevasIDs]));
+
+                dataToSend = {
+                    ...formData,
+                    comunidades: comunidadesFusionadas
+                };
+            }
         }
 
+        // 3. Ejecución de la llamada a la API
         try {
-            // 2. Ejecutar la llamada a la API con 'dataToSend'
             if (method === 'post') {
                 await axios.post(url, dataToSend);
             } else {
-                // Se envía el objeto con el array de comunidades fusionado
                 await axios.put(url, dataToSend);
             }
 
             // --- CÓDIGO DE ÉXITO ---
             resetForm();
-            await fetchData(); // Aseguramos que la tabla se refresque antes de cerrar
+            await fetchData();
             setShowModal(false);
 
         } catch (error) {
-            console.error('Error al guardar/actualizar propietario:', error.response?.data || error.message);
+            console.error(`Error al ${actionType} propietario:`, error.response?.data || error.message);
 
-            let errorMessage = 'Error al crear/actualizar propietario. Por favor, verifica los campos.';
+            let errorMessage = `Error al ${actionType} propietario. Por favor, verifica los campos.`;
 
-            // Lógica robusta de manejo de errores (incluyendo E11000)
+            // Manejo de errores
             if (error.response) {
                 const data = error.response.data;
 
@@ -155,7 +199,7 @@ const Propietarios = () => {
                 } else if (data && typeof data === 'string' && data.length > 0) {
                     errorMessage = data;
                 } else if (data && typeof data === 'object') {
-                    errorMessage = 'El servidor devolvió un error: ' + JSON.stringify(data);
+                    errorMessage = `El servidor devolvió un error: ${JSON.stringify(data)}`;
                 }
             } else if (error.message) {
                 errorMessage = `Error de conexión: ${error.message}`;
@@ -165,20 +209,72 @@ const Propietarios = () => {
         }
     };
 
-    // --- Funciones auxiliares para la tabla (sin cambios) ---
-    const handleDelete = async (id) => { /* ... */ };
-    const handleEdit = (id) => { navigate(`/propietarios/editar/${id}`); };
-    const handleManageComunidades = (propietarioId) => { alert(`Gestionar comunidades para Propietario ID: ${propietarioId}`); };
-    const handleManageGestor = (propietario) => {
-        if (propietario.gestorFinca) {
-            alert(`Editando/Viendo Gestor ID: ${propietario.gestorFinca._id}`);
-        } else {
-            alert(`Añadir Gestor al Propietario ID: ${propietario._id}`);
+    // --- GESTIÓN DE COMUNIDADES (C-GES) ---
+
+    // 1. Abrir modal de gestión
+    const handleManageComunidades = (propietarioId) => {
+        const propietario = propietarios.find(p => p._id === propietarioId);
+        if (propietario) {
+            setPropietarioComunidades(propietario);
+            setShowManagementModal(true);
         }
     };
+
+    // 2. Lógica para eliminar una sola comunidad
+    const handleRemoveCommunity = async (propietarioId, comunidadIdToRemove) => {
+        const propietario = propietarioComunidades;
+        if (!propietario || !window.confirm("¿Seguro que quieres desvincular esta comunidad del propietario?")) {
+            return;
+        }
+
+        // Crear el nuevo array de IDs, excluyendo la comunidad a eliminar
+        const comunidadesActuales = propietario.comunidades.map(c => c._id || c);
+        const nuevasComunidades = comunidadesActuales.filter(id => id !== comunidadIdToRemove);
+
+        try {
+            // Ejecutar la actualización (PUT) con el nuevo array
+            await axios.put(`${API_PROPIETARIOS}/${propietarioId}`, { comunidades: nuevasComunidades });
+
+            // Éxito: Recargar la lista principal y actualizar el modal de gestión
+            await fetchData();
+
+            // Actualizar el estado del modal de gestión con los datos frescos
+            const updatedPropietario = propietarios.find(p => p._id === propietarioId);
+            setPropietarioComunidades(updatedPropietario);
+
+        } catch (error) {
+            console.error('Error al desvincular comunidad:', error);
+            alert('Error al desvincular comunidad. Inténtelo de nuevo.');
+        }
+    };
+
+    // --- GESTIÓN DE ELIMINAR Y VOLVER ---
+
+    const handleDelete = async (id) => {
+        if (window.confirm('⚠️ ¿Estás seguro de que deseas eliminar este propietario? Esta acción es irreversible.')) {
+            try {
+                await axios.delete(`${API_PROPIETARIOS}/${id}`);
+                fetchData();
+            } catch (error) {
+                console.error('Error al eliminar propietario:', error);
+                alert('Error al eliminar propietario. Consulte la consola para más detalles.');
+            }
+        }
+    };
+
+    const handleManageGestor = (propietario) => {
+        if (propietario.gestorFinca) {
+            // Esto se reemplazaría idealmente por un modal de gestión de Gestor
+            alert(`Editando/Viendo Gestor ID: ${propietario.gestorFinca._id || propietario.gestorFinca}. (Lógica Pendiente)`);
+        } else {
+            // Esto se reemplazaría idealmente por un modal para asignar un Gestor
+            alert(`Añadir Gestor al Propietario ID: ${propietario._id}. (Lógica Pendiente)`);
+        }
+    };
+
     const handleGoBack = () => { navigate(-1); };
 
-    // Helpers para la tabla
+    // Helpers para la tabla (sin cambios)
     const getGestorNombre = (gestorId) => {
         const gestorEncontrado = empresas.find(emp => emp._id === gestorId);
         return gestorEncontrado ? gestorEncontrado.nombre : 'Sin gestor';
@@ -192,7 +288,7 @@ const Propietarios = () => {
         return comunidadesRelacionadas.map(c => c.nombre).join(', ');
     };
 
-    // --- JSX (sin cambios funcionales, solo se asegura el uso de handleCloseModal) ---
+    // --- RENDERIZADO DEL COMPONENTE ---
 
     if (loading) {
         return <div className="container mt-4">Cargando...</div>;
@@ -203,12 +299,12 @@ const Propietarios = () => {
             <h1 className="text-center">Gestión de Propietarios</h1>
 
             <div className="text-center mb-4">
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                <button className="btn btn-primary" onClick={() => { setIsEditing(false); setShowModal(true); }}>
                     ➕ Registrar Nuevo Propietario
                 </button>
             </div>
 
-            {/* USAMOS handleCloseModal para el fondo y la X */}
+            {/* -------------------- MODAL DE ALTA/EDICIÓN -------------------- */}
             {showModal && <div className="custom-modal-backdrop" onClick={handleCloseModal}></div>}
 
             {showModal && (
@@ -216,15 +312,14 @@ const Propietarios = () => {
                     <div className="modal-dialog modal-lg">
                         <div className="modal-content">
                             <div className="modal-header bg-primary text-white">
-                                <h5 className="modal-title">Alta de Propietario</h5>
+                                <h5 className="modal-title">{isEditing ? 'Editar Propietario' : 'Alta de Propietario'}</h5>
                                 <button
                                     type="button"
                                     className="btn-close"
-                                    onClick={handleCloseModal} // Llama a handleCloseModal
+                                    onClick={handleCloseModal}
                                 ></button>
                             </div>
                             <div className="modal-body">
-
                                 {formSubmitError && <div className="alert alert-danger">{formSubmitError}</div>}
 
                                 <form onSubmit={handleSubmit} noValidate>
@@ -238,12 +333,10 @@ const Propietarios = () => {
                                             <input type="text" className="form-control" name="telefono" value={formData.telefono} onChange={handleChange} />
                                         </div>
                                     </div>
-
                                     <div className="mb-3">
                                         <label className="form-label">Email</label>
                                         <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} />
                                     </div>
-
                                     <div className="mb-3">
                                         <label className="form-label">Gestor de Finca</label>
                                         <select
@@ -282,18 +375,74 @@ const Propietarios = () => {
                                     </div>
                                     <div className="d-flex justify-content-end">
                                         <button type="submit" className="btn btn-success me-2">
-                                            💾 Guardar Propietario
+                                            💾 {isEditing ? 'Guardar Cambios' : 'Guardar Propietario'}
                                         </button>
                                     </div>
                                 </form>
-
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Tabla de Listado */}
+            {/* -------------------- MODAL DE GESTIÓN DE COMUNIDADES (C-Ges) -------------------- */}
+            {showManagementModal && propietarioComunidades && (
+                <div className="custom-modal-backdrop" onClick={() => setShowManagementModal(false)}>
+                    <div className="modal fade show custom-modal" style={{ display: 'block' }} tabIndex="-1">
+                        <div className="modal-dialog">
+                            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                                <div className="modal-header bg-info text-white">
+                                    <h5 className="modal-title">
+                                        Gestionar Comunidades de {propietarioComunidades.nombre}
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => setShowManagementModal(false)}
+                                    ></button>
+                                </div>
+                                <div className="modal-body">
+                                    {propietarioComunidades.comunidades.length === 0 ? (
+                                        <p>Este propietario no está asociado a ninguna comunidad.</p>
+                                    ) : (
+                                        <ul className="list-group">
+                                            {propietarioComunidades.comunidades.map(comunidad => {
+                                                // Aseguramos obtener el ID y el nombre
+                                                const comunidadId = comunidad._id || comunidad;
+                                                const nombreComunidad = comunidades.find(c => c._id === comunidadId)?.nombre || `ID Desconocido: ${comunidadId}`;
+
+                                                return (
+                                                    <li key={comunidadId} className="list-group-item d-flex justify-content-between align-items-center">
+                                                        {nombreComunidad}
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() => handleRemoveCommunity(propietarioComunidades._id, comunidadId)}
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    )}
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={() => setShowManagementModal(false)}
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            {/* -------------------- TABLA DE LISTADO -------------------- */}
             <h2 className="mt-5">Listado de Propietarios</h2>
             <table className="table table-bordered table-striped">
                 <thead>
@@ -308,8 +457,6 @@ const Propietarios = () => {
                 </thead>
                 <tbody>
                 {propietarios.map(prop => {
-                    const gestorNombre = getGestorNombre(prop.gestorFinca);
-                    const comunidadesNombres = getComunidadesNombres(prop.comunidades);
                     const comunidadesCount = prop.comunidades ? prop.comunidades.length : 0;
                     const gestorBotonTexto = prop.gestorFinca ? 'Ver/Editar Gestor' : 'Añadir Gestor';
                     const gestorBotonColor = prop.gestorFinca ? 'btn-primary' : 'btn-success';
@@ -319,9 +466,8 @@ const Propietarios = () => {
                             <td>{prop.nombre}</td>
                             <td>{prop.telefono}</td>
                             <td>{prop.email}</td>
-
-                            <td>{gestorNombre}</td>
-                            <td>{comunidadesNombres}</td>
+                            <td>{getGestorNombre(prop.gestorFinca)}</td>
+                            <td>{getComunidadesNombres(prop.comunidades)}</td>
 
                             <td>
                                 <button
@@ -329,7 +475,7 @@ const Propietarios = () => {
                                     onClick={() => handleManageGestor(prop)}
                                     title={gestorBotonTexto}
                                 >
-                                    {prop.gestorFinca ? 'G-Edit' : 'G-Add'}
+                                    G-Edit
                                 </button>
 
                                 <button
