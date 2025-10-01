@@ -10,6 +10,7 @@ const propietariosRouter = require('./routes/propietarios');
 const bancosRouter = require('./routes/bancos');
 const movimientosRoutes = require('./routes/movimientos');
 const comunidadesRouter = require('./routes/comunidades');
+const rolRoutes = require('./routes/rol');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/propietarios', propietariosRouter);
 app.use('/api/bancos', bancosRouter);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/comunidades', comunidadesRouter);
+app.use('/api/roles', rolRoutes);
 
 
 // Manejar rutas no definidas

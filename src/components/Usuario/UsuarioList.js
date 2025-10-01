@@ -1,37 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import UsuarioService from '../../services/UsuarioService';
+import axios from 'axios';
 
-const UsuarioList = () => {
+const ListaUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        UsuarioService.getUsuarios()
-            .then((data) => {
-                console.log('Usuarios obtenidos en el componente:', data); // Verifica los datos aquí
-                setUsuarios(data);
-            })
-            .catch((err) => {
-                console.error('Error al obtener usuarios:', err);
+        const fetchUsuarios = async () => {
+            try {
+                const res = await axios.get('http://localhost:3001/api/usuarios');
+                setUsuarios(res.data);
+            } catch (err) {
                 setError('Error al obtener usuarios');
-            });
+            }
+        };
+        fetchUsuarios();
     }, []);
-
-    //console.log('Estado usuarios antes de renderizar:', usuarios); // Verifica el estado
 
     return (
         <div>
-            <h1>Lista de Usuarios</h1>
-            {error ? <p>{error}</p> : null}
+            <h2>Lista de Usuarios</h2>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
             <ul>
-                {Array.isArray(usuarios) && usuarios.map((usuario) => (
-                    <li key={usuario._id}>
-                        {usuario.nombre} - Rol: {usuario.rol}
-                    </li>
+                {usuarios.map(usuario => (
+                    <li key={usuario._id}>{usuario.nombre}</li>
                 ))}
             </ul>
         </div>
     );
 };
 
-export default UsuarioList;
+export default ListaUsuarios;

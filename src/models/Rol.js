@@ -1,7 +1,7 @@
 // models/Rol.js
 const mongoose = require('mongoose');
 
-const UsuarioSchema = new mongoose.Schema({
+const RolSchema = new mongoose.Schema({
     nombre: {
         type: String,
         enum: ['Administrador', 'Propietario', 'Usuario_1', 'Usuario_2'],
@@ -9,5 +9,5 @@ const UsuarioSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Usuario', UsuarioSchema);
+module.exports = mongoose.model('Rol', RolSchema);
 

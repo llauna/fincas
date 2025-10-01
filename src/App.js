@@ -17,6 +17,7 @@ import Movimientos from './components/Finanzas/Movimientos';
 import Caja from './components/Finanzas/Caja';
 
 
+
 const App = () => {
     return (
         <Router>

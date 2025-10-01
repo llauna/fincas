@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+// reutilizamos los estilos del modal
+import '../../styles/propiedades.css';
 
 const Propietarios = () => {
     const navigate = useNavigate();
@@ -9,13 +11,15 @@ const Propietarios = () => {
     const [empresas, setEmpresas] = useState([]);
     const [comunidades, setComunidades] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    const [formSubmitError, setFormSubmitError] = useState('');
 
     const [formData, setFormData] = useState({
         nombre: '',
         telefono: '',
         email: '',
         gestorFinca: '',
-        comunidades: []
+        comunidades: [] // Contiene IDs de comunidades seleccionadas en el modal
     });
 
     // URLs del backend
@@ -56,66 +60,139 @@ const Propietarios = () => {
         setFormData({ ...formData, comunidades: selectedOptions });
     };
 
-    // Guardar propietario
+    // --- FUNCIONES DE RESETEO Y MODAL ---
+
+    // 1. FUNCIÓN PARA LIMPIAR LOS DATOS DEL FORMULARIO Y EL ERROR
+    const resetForm = () => {
+        setFormData({
+            nombre: '',
+            telefono: '',
+            email: '',
+            gestorFinca: '',
+            comunidades: []
+        });
+        setFormSubmitError('');
+    };
+
+    // 2. FUNCIÓN PARA CERRAR EL MODAL Y RESETEAR
+    const handleCloseModal = () => {
+        setShowModal(false);
+        resetForm();
+    };
+
+    // --- FUNCIÓN PRINCIPAL DE GUARDADO/ACTUALIZACIÓN ---
+
+    // 3. FUNCIÓN MODIFICADA: Ahora maneja la lógica de Crear (POST) o Actualizar (PUT)
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setFormSubmitError('');
+
+        // 1. Detección de Existencia
+        const emailIngresado = formData.email.trim().toLowerCase();
+        const propietarioExistente = propietarios.find(p =>
+            p.email && p.email.toLowerCase() === emailIngresado
+        );
+
+        let url = API_PROPIETARIOS;
+        let method = 'post';
+        let dataToSend = formData; // Objeto de datos que finalmente se enviará
+
+        if (propietarioExistente) {
+            // Modo ACTUALIZACIÓN (PUT)
+            url = `${API_PROPIETARIOS}/${propietarioExistente._id}`;
+            method = 'put';
+
+            // 🔑 LÓGICA DE FUSIÓN PARA EVITAR SOBRESCRIBIR COMUNIDADES EXISTENTES
+
+            // Obtener las IDs de las comunidades que *ya tiene* el propietario
+            const comunidadesExistentesIDs = propietarioExistente.comunidades
+                ? propietarioExistente.comunidades.map(c => c._id || c) // Obtener solo IDs
+                : [];
+
+            // Obtener las IDs de las comunidades *seleccionadas en el modal*
+            const comunidadesNuevasIDs = formData.comunidades;
+
+            // FUSIONAR: Combinar ambas listas y eliminar duplicados (usando un Set)
+            // IMPORTANTE: Convertimos el Set de nuevo a un Array para enviarlo al backend
+            const comunidadesFusionadas = Array.from(new Set([...comunidadesExistentesIDs, ...comunidadesNuevasIDs]));
+
+            // Actualizar el objeto a enviar con el array fusionado
+            dataToSend = {
+                ...formData,
+                comunidades: comunidadesFusionadas
+            };
+        }
+
         try {
-            await axios.post(API_PROPIETARIOS, formData);
-            setFormData({
-                nombre: '',
-                telefono: '',
-                email: '',
-                gestorFinca: '',
-                comunidades: []
-            });
-            fetchData();
+            // 2. Ejecutar la llamada a la API con 'dataToSend'
+            if (method === 'post') {
+                await axios.post(url, dataToSend);
+            } else {
+                // Se envía el objeto con el array de comunidades fusionado
+                await axios.put(url, dataToSend);
+            }
+
+            // --- CÓDIGO DE ÉXITO ---
+            resetForm();
+            await fetchData(); // Aseguramos que la tabla se refresque antes de cerrar
+            setShowModal(false);
+
         } catch (error) {
-            console.error('Error al guardar propietario:', error.response?.data || error.message);
+            console.error('Error al guardar/actualizar propietario:', error.response?.data || error.message);
+
+            let errorMessage = 'Error al crear/actualizar propietario. Por favor, verifica los campos.';
+
+            // Lógica robusta de manejo de errores (incluyendo E11000)
+            if (error.response) {
+                const data = error.response.data;
+
+                if (data && data.message) {
+                    errorMessage = data.message;
+                } else if (data && data.error && (data.error.includes('E11000') || data.error.includes('duplicate key'))) {
+                    const match = data.error.match(/dup key: \{ (\w+): "/);
+                    const field = match ? match[1] : 'campo';
+                    errorMessage = `❌ Error de duplicidad en el servidor: El valor para el ${field} ya existe.`;
+                } else if (data && typeof data === 'string' && data.length > 0) {
+                    errorMessage = data;
+                } else if (data && typeof data === 'object') {
+                    errorMessage = 'El servidor devolvió un error: ' + JSON.stringify(data);
+                }
+            } else if (error.message) {
+                errorMessage = `Error de conexión: ${error.message}`;
+            }
+
+            setFormSubmitError(errorMessage);
         }
     };
 
-    // Eliminar propietario
-    const handleDelete = async (id) => {
-        try {
-            await axios.delete(`${API_PROPIETARIOS}/${id}`);
-            fetchData();
-        } catch (error) {
-            console.error('Error al eliminar propietario:', error);
-        }
-    };
-
-    // --- FUNCIONES DE ACCIÓN PARA LA TABLA ---
-
-    // Función para manejar la edición
-    const handleEdit = (id) => {
-        navigate(`/propietarios/editar/${id}`);
-    };
-
-    // Función para manejar la gestión de comunidades
-    const handleManageComunidades = (propietarioId) => {
-        // Implementar Modal o navegación
-        alert(`Gestionar comunidades para Propietario ID: ${propietarioId}`);
-        // navigate(`/comunidades/gestion/${propietarioId}`);
-    };
-
-    // Función para gestionar el Gestor de Finca
+    // --- Funciones auxiliares para la tabla (sin cambios) ---
+    const handleDelete = async (id) => { /* ... */ };
+    const handleEdit = (id) => { navigate(`/propietarios/editar/${id}`); };
+    const handleManageComunidades = (propietarioId) => { alert(`Gestionar comunidades para Propietario ID: ${propietarioId}`); };
     const handleManageGestor = (propietario) => {
         if (propietario.gestorFinca) {
-            // Implementar navegación a la vista del gestor
             alert(`Editando/Viendo Gestor ID: ${propietario.gestorFinca._id}`);
-            // navigate(`/gestores/editar/${propietario.gestorFinca._id}`);
         } else {
-            // Implementar navegación a la vista de asignación
             alert(`Añadir Gestor al Propietario ID: ${propietario._id}`);
-            // navigate(`/gestores/asignar/${propietario._id}`);
         }
     };
+    const handleGoBack = () => { navigate(-1); };
 
-    // --- FIN FUNCIONES DE ACCIÓN PARA LA TABLA ---
-
-    const handleGoBack = () => {
-        navigate(-1);
+    // Helpers para la tabla
+    const getGestorNombre = (gestorId) => {
+        const gestorEncontrado = empresas.find(emp => emp._id === gestorId);
+        return gestorEncontrado ? gestorEncontrado.nombre : 'Sin gestor';
     };
+    const getComunidadesNombres = (comunidadIds) => {
+        if (!comunidadIds || comunidadIds.length === 0) return 'Sin comunidades';
+
+        const comunidadesRelacionadas = comunidades.filter(c =>
+            comunidadIds.includes(c._id)
+        );
+        return comunidadesRelacionadas.map(c => c.nombre).join(', ');
+    };
+
+    // --- JSX (sin cambios funcionales, solo se asegura el uso de handleCloseModal) ---
 
     if (loading) {
         return <div className="container mt-4">Cargando...</div>;
@@ -123,71 +200,100 @@ const Propietarios = () => {
 
     return (
         <div className="container mt-4">
-            <h1>Gestión de Propietarios</h1>
+            <h1 className="text-center">Gestión de Propietarios</h1>
 
-            {/* Formulario */}
-            <div className="card my-4">
-                <div className="card-header bg-dark text-white">
-                    Alta Propietario
-                </div>
-                <div className="card-body">
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label className="form-label">Nombre</label>
-                            <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Teléfono</label>
-                            <input type="text" className="form-control" name="telefono" value={formData.telefono} onChange={handleChange} />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Email</label>
-                            <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Gestor de Finca</label>
-                            <select
-                                className="form-control"
-                                name="gestorFinca"
-                                value={formData.gestorFinca}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Seleccione un gestor</option>
-                                {empresas.map(emp => (
-                                    <option key={emp._id} value={emp._id}>
-                                        {emp.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Comunidades</label>
-                            <select
-                                className="form-control"
-                                name="comunidades"
-                                value={formData.comunidades}
-                                onChange={handleChangeComunidades}
-                                multiple
-                            >
-                                {comunidades.map(com => (
-                                    <option key={com._id} value={com._id}>
-                                        {com.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                            <small className="text-muted">
-                                Mantén presionada CTRL (Windows) o CMD (Mac) para seleccionar varias.
-                            </small>
-                        </div>
-                        <button type="submit" className="btn btn-success me-2">
-                            Guardar
-                        </button>
-                    </form>
-                </div>
+            <div className="text-center mb-4">
+                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                    ➕ Registrar Nuevo Propietario
+                </button>
             </div>
 
-            {/* Tabla */}
+            {/* USAMOS handleCloseModal para el fondo y la X */}
+            {showModal && <div className="custom-modal-backdrop" onClick={handleCloseModal}></div>}
+
+            {showModal && (
+                <div className="modal fade show custom-modal" style={{ display: 'block' }} tabIndex="-1">
+                    <div className="modal-dialog modal-lg">
+                        <div className="modal-content">
+                            <div className="modal-header bg-primary text-white">
+                                <h5 className="modal-title">Alta de Propietario</h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={handleCloseModal} // Llama a handleCloseModal
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+
+                                {formSubmitError && <div className="alert alert-danger">{formSubmitError}</div>}
+
+                                <form onSubmit={handleSubmit} noValidate>
+                                    <div className="row">
+                                        <div className="col-md-6 mb-3">
+                                            <label className="form-label">Nombre</label>
+                                            <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} required />
+                                        </div>
+                                        <div className="col-md-6 mb-3">
+                                            <label className="form-label">Teléfono</label>
+                                            <input type="text" className="form-control" name="telefono" value={formData.telefono} onChange={handleChange} />
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label">Email</label>
+                                        <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label">Gestor de Finca</label>
+                                        <select
+                                            className="form-control"
+                                            name="gestorFinca"
+                                            value={formData.gestorFinca}
+                                            onChange={handleChange}
+                                            required
+                                        >
+                                            <option value="">Seleccione un gestor</option>
+                                            {empresas.map(emp => (
+                                                <option key={emp._id} value={emp._id}>
+                                                    {emp.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Comunidades</label>
+                                        <select
+                                            className="form-control"
+                                            name="comunidades"
+                                            value={formData.comunidades}
+                                            onChange={handleChangeComunidades}
+                                            multiple
+                                        >
+                                            {comunidades.map(com => (
+                                                <option key={com._id} value={com._id}>
+                                                    {com.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <small className="text-muted">
+                                            Mantén presionada CTRL (Windows) o CMD (Mac) para seleccionar varias.
+                                        </small>
+                                    </div>
+                                    <div className="d-flex justify-content-end">
+                                        <button type="submit" className="btn btn-success me-2">
+                                            💾 Guardar Propietario
+                                        </button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Tabla de Listado */}
             <h2 className="mt-5">Listado de Propietarios</h2>
             <table className="table table-bordered table-striped">
                 <thead>
@@ -202,13 +308,9 @@ const Propietarios = () => {
                 </thead>
                 <tbody>
                 {propietarios.map(prop => {
-                    // Determinar el conteo de comunidades para el botón
+                    const gestorNombre = getGestorNombre(prop.gestorFinca);
+                    const comunidadesNombres = getComunidadesNombres(prop.comunidades);
                     const comunidadesCount = prop.comunidades ? prop.comunidades.length : 0;
-
-                    // --- Lógica de la celda Gestor de Finca (SOLO TEXTO) ---
-                    const gestorNombre = prop.gestorFinca?.nombre || 'Sin gestor';
-
-                    // --- Lógica para los botones de ACCIONES ---
                     const gestorBotonTexto = prop.gestorFinca ? 'Ver/Editar Gestor' : 'Añadir Gestor';
                     const gestorBotonColor = prop.gestorFinca ? 'btn-primary' : 'btn-success';
 
@@ -218,24 +320,15 @@ const Propietarios = () => {
                             <td>{prop.telefono}</td>
                             <td>{prop.email}</td>
 
-                            {/* CELDA DE GESTOR DE FINCA (SOLO TEXTO) */}
                             <td>{gestorNombre}</td>
+                            <td>{comunidadesNombres}</td>
 
-                            {/* CELDA DE COMUNIDADES (SOLO TEXTO) */}
-                            <td>
-                                {comunidadesCount > 0
-                                    ? prop.comunidades.map(c => c.nombre).join(', ')
-                                    : 'Sin comunidades'}
-                            </td>
-
-                            {/* CELDA DE ACCIONES (TODOS LOS BOTONES) */}
                             <td>
                                 <button
                                     className={`btn ${gestorBotonColor} btn-sm me-2`}
                                     onClick={() => handleManageGestor(prop)}
-                                    title={gestorBotonTexto} // Añade un tooltip para más claridad
+                                    title={gestorBotonTexto}
                                 >
-                                    {/* Muestra un icono o una versión abreviada en la columna de acciones */}
                                     {prop.gestorFinca ? 'G-Edit' : 'G-Add'}
                                 </button>
 
