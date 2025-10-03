@@ -10,56 +10,64 @@ const Navbar = () => {
     const [isFinanzasMenuOpen, setIsFinanzasMenuOpen] = useState(false);
     const navigate = useNavigate();
 
+// 🔹 Recuperar usuario logueado de forma segura
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    // user debe tener { tipo: 'empleado' | 'cliente', rol: '...' }
+
     const handleLogout = () => {
         localStorage.removeItem('authToken');
+        localStorage.removeItem('user'); // limpiar datos usuario
         navigate('/login');
     };
 
     const toggleInicioMenu = () => {
         setIsInicioMenuOpen(!isInicioMenuOpen);
-        setIsUsuarioMenuOpen(false);// Cierra el otro menú si está abierto
+        setIsUsuarioMenuOpen(false);
         setIsGestionMenuOpen(false);
         setIsFinanzasMenuOpen(false);
-
     };
     const toggleGestionMenu = () => {
         setIsGestionMenuOpen(!isGestionMenuOpen);
         setIsInicioMenuOpen(false);
-        setIsUsuarioMenuOpen(false); // Cierra el otro menú si está abierto
+        setIsUsuarioMenuOpen(false);
         setIsFinanzasMenuOpen(false);
     };
-
     const toggleUsuarioMenu = () => {
         setIsUsuarioMenuOpen(!isUsuarioMenuOpen);
         setIsInicioMenuOpen(false);
-        setIsGestionMenuOpen(false); // Cierra el otro menú si está abierto
+        setIsGestionMenuOpen(false);
         setIsFinanzasMenuOpen(false);
     };
-
     const toggleFinanzasMenu = () => {
         setIsFinanzasMenuOpen(!isFinanzasMenuOpen);
         setIsInicioMenuOpen(false);
         setIsGestionMenuOpen(false);
         setIsUsuarioMenuOpen(false);
     };
+
     return (
         <nav style={{ display: 'flex', justifyContent: 'flex-start', gap: '20px', backgroundColor: '#333', padding: '10px', position: 'absolute', left: 0, top: 0, width: '100%', zIndex: 1000 }}>
 
-            {/* Menú Desplegable de Inicio */}
-            <div style={{ position: 'relative' }}>
-                <Link to="#" onClick={toggleInicioMenu} style={{ color: 'white', textDecoration: 'none' }}>
-                    Inicio
-                </Link>
-                {isInicioMenuOpen && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#444', border: '1px solid #555', zIndex: 10, minWidth: '150px' }}>
-                        <Link to="/empresa" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Empresa</Link>
-                        <Link to="/empleados" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Empleados</Link>
-                        <Link to="/proveedores" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>Proveedores</Link>
-                        <Link to="/roles" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>Roles</Link>
-                    </div>
-                )}
-            </div>
-            {/* Menú Desplegable de Gestión */}
+                {/* Menú Inicio */}
+                <div style={{ position: 'relative' }}>
+                    <Link to="#" onClick={toggleInicioMenu} style={{ color: 'white', textDecoration: 'none' }}>
+                        Inicio
+                    </Link>
+                    {isInicioMenuOpen && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#444', border: '1px solid #555', zIndex: 10, minWidth: '150px' }}>
+                            <Link to="/empresa" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Empresa</Link>
+                            {/* 🔹 Solo mostrar si es empleado */}
+                            {user?.tipo === 'empleado' && (
+                                <Link to="/empleados" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none', borderBottom: '1px solid #555' }}>Empleados</Link>
+                            )}
+                            <Link to="/proveedores" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>Proveedores</Link>
+                            <Link to="/roles" onClick={() => setIsInicioMenuOpen(false)} style={{ display: 'block', padding: '10px', color: 'white', textDecoration: 'none' }}>Roles</Link>
+                        </div>
+                    )}
+                </div>
+            {/* Menú Gestión */}
             <div style={{ position: 'relative' }}>
                 <Link to="#" onClick={toggleGestionMenu} style={{ color: 'white', textDecoration: 'none' }}>
                     Gestión
@@ -73,7 +81,7 @@ const Navbar = () => {
                 )}
             </div>
 
-            {/* Menú Desplegable de Usuarios */}
+            {/* Menú Usuarios */}
             <div style={{ position: 'relative' }}>
                 <Link to="#" onClick={toggleUsuarioMenu} style={{ color: 'white', textDecoration: 'none' }}>
                     Usuarios
@@ -86,7 +94,7 @@ const Navbar = () => {
                 )}
             </div>
 
-            {/* Menú Desplegable de Finanzas */}
+            {/* Menú Finanzas */}
             <div style={{ position: 'relative' }}>
                 <Link to="#" onClick={toggleFinanzasMenu} style={{ color: 'white', textDecoration: 'none' }}>
                     Finanzas

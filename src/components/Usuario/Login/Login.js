@@ -1,9 +1,8 @@
-// components/Login.js
+// src/components/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import AuthService from '../../../services/AuthService';
-import './Login.css';
 import axios from "axios";
+import './Login.css';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -13,19 +12,28 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
+            // 🔹 Petición al backend para login
             const response = await axios.post('http://localhost:3001/usuarios/login', { email, password });
 
-            // Guarda el token en localStorage
+            // 🔹 Guardar token y datos de usuario en localStorage
             const token = response.data.token;
+            const userData = response.data.user; // el backend debe enviarlo
+
+            if (!userData) {
+                alert('Error: el backend no está enviando los datos del usuario');
+                return;
+            }
+
             localStorage.setItem('authToken', token);
+            localStorage.setItem('user', JSON.stringify(userData));
 
             alert('Inicio de sesión exitoso');
             navigate('/dashboard');
         } catch (error) {
-            alert('Error al iniciar sesión');
+            console.error('Error al iniciar sesión:', error);
+            alert(error.response?.data?.message || 'Error al iniciar sesión');
         }
     };
-
 
     return (
         <div className="container d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
@@ -41,10 +49,11 @@ const Login = () => {
                             placeholder="Ingresa tu correo"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            required
                         />
                     </div>
                     <div className="form-group d-flex align-items-center mb-3">
-                        <label htmlFor="password" className="me-3" style={{ width: '150px', textAlign: 'right' }} >Contraseña</label>
+                        <label htmlFor="password" className="me-3" style={{ width: '150px', textAlign: 'right' }}>Contraseña</label>
                         <input
                             type="password"
                             id="password"
@@ -52,6 +61,7 @@ const Login = () => {
                             placeholder="Ingresa tu contraseña"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            required
                         />
                     </div>
                     <button type="submit" className="btn btn-primary w-100">Iniciar Sesión</button>

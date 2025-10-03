@@ -1,53 +1,49 @@
-// routes/usuarios.js
 const express = require('express');
 const router = express.Router();
-const Usuario = require('../models/Usuario');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const Usuario = require('../models/Usuario'); // Ajusta la ruta a tu modelo
 
-
-// Obtener todos los usuarios
-router.get('/', async (req, res) => {
-    try {
-        const usuarios = await Usuario.find();
-        // La respuesta debe tener el mismo formato que esperas en el frontend
-        res.status(200).json({
-            success: true,
-            data: usuarios // ¡Esta propiedad 'data' es la que esperas!
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Error al obtener usuarios', error });
-    }
-});
-
-// Crear un nuevo usuario
-router.post('/', async (req, res) => {
-    try {
-        const nuevoUsuario = new Usuario(req.body);
-        const usuarioGuardado = await nuevoUsuario.save();
-        res.json(usuarioGuardado);
-    } catch (err) {
-        console.error('Error al crear usuario:', err); // Log para errores
-        res.status(500).send(err);
-    }
-});
-
-// Login de usuario
+// POST /usuarios/login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
+        // Buscar usuario por email
         const usuario = await Usuario.findOne({ email });
-
-        if (!usuario || usuario.password !== password) {
-            return res.status(401).json({ message: 'Credenciales inválidas' });
+        if (!usuario) {
+            return res.status(400).json({ message: 'Usuario no encontrado' });
         }
 
-        return res.status(200).json({ token: 'fake-jwt-token', usuario });
+        // Comparar contraseñas
+        const esPasswordValida = await bcrypt.compare(password, usuario.password);
+        if (!esPasswordValida) {
+            return res.status(400).json({ message: 'Contraseña incorrecta' });
+        }
+
+        // Crear token JWT
+        const token = jwt.sign(
+            { id: usuario._id, tipo: usuario.tipo, rol: usuario.rol },
+            process.env.JWT_SECRET || 'secreto',
+            { expiresIn: '8h' }
+        );
+
+        // Devolver token y datos del usuario
+        res.json({
+            token,
+            user: {
+                _id: usuario._id,
+                nombre: usuario.nombre,
+                email: usuario.email,
+                tipo: usuario.tipo, // 'empleado' o 'cliente'
+                rol: usuario.rol    // 'admin', 'gestor', 'cliente', etc.
+            }
+        });
+
     } catch (error) {
         console.error('Error en login:', error);
-        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+        res.status(500).json({ message: 'Error en el servidor' });
     }
 });
 
-
 module.exports = router;
-
