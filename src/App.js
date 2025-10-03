@@ -15,8 +15,8 @@ import AdministradorFincas from "./components/AdministradorFincas/AdministradorF
 import Banco from './components/Finanzas/Banco';
 import Movimientos from './components/Finanzas/Movimientos';
 import Caja from './components/Finanzas/Caja';
-
-
+import ListaCajas from './components/Finanzas/ListaCajas';
+import ListaMovimientosGlobal from './components/Finanzas/ListaMovimientosGlobal';
 
 const App = () => {
     return (
@@ -34,7 +34,8 @@ const App = () => {
                 <Route path="/roles" element={<Roles />} />
                 <Route path="/configuracion" element={<Configuracion />} />
                 <Route path="/banco" element={<Banco />} />
-
+                <Route path="/lista-cajas" element={<ListaCajas />} />
+                <Route path="/movimientos-globales" element={<ListaMovimientosGlobal />} />
                 <Route path="/movimientos" element={<Movimientos />} />
                 <Route path="/movimientos/:bancoId" element={<Movimientos />} />
                 <Route path="/caja" element={<Caja />} />

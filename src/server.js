@@ -11,6 +11,7 @@ const bancosRouter = require('./routes/bancos');
 const movimientosRoutes = require('./routes/movimientos');
 const comunidadesRouter = require('./routes/comunidades');
 const rolRoutes = require('./routes/rol');
+const cajaRoutes = require('./routes/caja');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/administradorfincas', administradorRouter);
 app.use('/api/propiedades', propiedadesRouter);
 app.use('/api/propietarios', propietariosRouter);
 app.use('/api/bancos', bancosRouter);
+app.use('/api/cajas', cajaRoutes);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/comunidades', comunidadesRouter);
 app.use('/api/roles', rolRoutes);
