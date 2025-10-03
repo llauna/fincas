@@ -4,21 +4,15 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="mdG9mfmcp8blmTllGsDG-1" value="Actor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
-          <mxGeometry x="70" y="80" width="30" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="mdG9mfmcp8blmTllGsDG-2" value="Actor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
-          <mxGeometry x="70" y="210" width="30" height="60" as="geometry" />
-        </mxCell>
         <mxCell id="mdG9mfmcp8blmTllGsDG-3" value="" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="130" y="150" width="80" height="80" as="geometry" />
         </mxCell>
         <mxCell id="xG3fDYSQxabQkapDXZWE-7" value="ActorName" style="shape=umlActor;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="660" y="220" width="30" height="60" as="geometry" />
+          <mxGeometry x="70" y="100" width="30" height="60" as="geometry" />
         </mxCell>
         <object label="ActorName" link="data:page/id,ADuWLQ4_nhSAQghTTya2" id="xG3fDYSQxabQkapDXZWE-8">
-          <mxCell style="shape=umlActor;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
-            <mxGeometry x="200" y="270" width="30" height="60" as="geometry" />
+          <mxCell style="shape=umlActor;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+            <mxGeometry x="70" y="210" width="30" height="60" as="geometry" />
           </mxCell>
         </object>
       </root>
