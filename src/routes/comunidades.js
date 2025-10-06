@@ -2,38 +2,50 @@
 const express = require('express');
 const router = express.Router();
 const Comunidad = require('../models/Comunidad');
+const jwt = require('jsonwebtoken');
 
-// Obtener todas las comunidades
-router.get('/', async (req, res) => {
+// Middleware para verificar token
+function verificarToken(req, res, next) {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(403).json({ message: 'Token requerido' });
+
     try {
-        const comunidades = await Comunidad.find().populate('propietarios');
-        res.status(200).json(comunidades);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secreto');
+        req.user = decoded; // { id, tipo, rol }
+        next();
     } catch (error) {
-        res.status(500).json({ message: 'Error al obtener comunidades', error: error.message });
+        return res.status(401).json({ message: 'Token inválido' });
     }
-});
+}
 
-// Crear nueva comunidad
-router.post('/', async (req, res) => {
+// 🔹 Ruta para empleados: todas las comunidades
+router.get('/', verificarToken, async (req, res) => {
     try {
-        const nuevaComunidad = new Comunidad(req.body);
-        const comunidadGuardada = await nuevaComunidad.save();
-        res.status(201).json(comunidadGuardada);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al crear comunidad', error: error.message });
-    }
-});
-
-// Eliminar comunidad
-router.delete('/:id', async (req, res) => {
-    try {
-        const comunidadEliminada = await Comunidad.findByIdAndDelete(req.params.id);
-        if (!comunidadEliminada) {
-            return res.status(404).json({ message: 'Comunidad no encontrada' });
+        if (req.user.tipo !== 'empleado') {
+            return res.status(403).json({ message: 'Acceso denegado' });
         }
-        res.json({ message: 'Comunidad eliminada correctamente' });
+        const comunidades = await Comunidad.find();
+        res.json(comunidades);
     } catch (error) {
-        res.status(500).json({ message: 'Error al eliminar comunidad', error: error.message });
+        res.status(500).json({ message: 'Error al obtener comunidades' });
+    }
+});
+
+// 🔹 Ruta para clientes: solo sus comunidades
+router.get('/mis-comunidades', verificarToken, async (req, res) => {
+    try {
+        if (req.user.tipo !== 'cliente') {
+            return res.status(403).json({ message: 'Acceso denegado' });
+        }
+        const comunidades = await Comunidad.find({
+            $or: [
+                { propietarios: req.user.id },
+                { arrendatarios: req.user.id }
+            ]
+        });
+        res.json(comunidades);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener comunidades del cliente' });
     }
 });
 

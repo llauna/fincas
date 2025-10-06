@@ -1,13 +1,19 @@
 // src/components/Usuario/Login/Dashboard.js
 import React from 'react';
-import Navbar from '../../Shared/Navbar'; // Asegúrate de que la ruta sea correcta
+
 
 const Dashboard = () => {
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
     return (
         <div>
-            <Navbar /> {/* Renderiza el menú aquí */}
-            <h1>Bienvenido al Dashboard</h1>
-            <p>Contenido principal de la aplicación...</p>
+            {user?.tipo === 'empleado' && (
+                <h1>Bienvenido, Empleado 👨‍💼</h1>
+            )}
+            {user?.tipo === 'cliente' && (
+                <h1>Bienvenido, Cliente 🏠</h1>
+            )}
+            <p>Este es tu panel de control.</p>
         </div>
     );
 };

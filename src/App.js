@@ -1,6 +1,6 @@
-// src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Navbar from './components/Shared/Navbar';
 import Login from './components/Usuario/Login/Login';
 import Dashboard from './components/Usuario/Login/Dashboard';
 import Propiedades from "./components/Propiedades/Propiedades";
@@ -18,32 +18,45 @@ import Caja from './components/Finanzas/Caja';
 import ListaCajas from './components/Finanzas/ListaCajas';
 import ListaMovimientosGlobal from './components/Finanzas/ListaMovimientosGlobal';
 
+const AppContent = () => {
+    const location = useLocation();
+    const hideNavbar = location.pathname === "/login"; // Ocultar navbar en login
+
+    return (
+        <>
+            {!hideNavbar && <Navbar />}
+            <div className="main-content">
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/usuario" element={<Empleados />} />
+                    <Route path="/empresa" element={<Empresa />} />
+                    <Route path="/proveedores" element={<Proveedores />} />
+                    <Route path="/administradorFincas" element={<AdministradorFincas />} />
+                    <Route path="/propiedades" element={<Propiedades />} />
+                    <Route path="/propietarios" element={<Propietarios />} />
+                    <Route path="/comunidades" element={<Comunidades />} />
+                    <Route path="/roles" element={<Roles />} />
+                    <Route path="/configuracion" element={<Configuracion />} />
+                    <Route path="/banco" element={<Banco />} />
+                    <Route path="/lista-cajas" element={<ListaCajas />} />
+                    <Route path="/movimientos-globales" element={<ListaMovimientosGlobal />} />
+                    <Route path="/movimientos" element={<Movimientos />} />
+                    <Route path="/movimientos/:bancoId" element={<Movimientos />} />
+                    <Route path="/caja" element={<Caja />} />
+                    <Route path="*" element={<Navigate to="/login" />} />
+                </Routes>
+            </div>
+        </>
+    );
+};
+
 const App = () => {
     return (
         <Router>
-            <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/usuario" element={<Empleados />} />
-                <Route path="/empresa" element={<Empresa />} />
-                <Route path="/proveedores" element={<Proveedores />} />
-                <Route path="/administradorFincas" element={<AdministradorFincas />} />
-                <Route path="/propiedades" element={<Propiedades />} />
-                <Route path="/propietarios" element={<Propietarios />} />
-                <Route path="/comunidades" element={<Comunidades />} />
-                <Route path="/roles" element={<Roles />} />
-                <Route path="/configuracion" element={<Configuracion />} />
-                <Route path="/banco" element={<Banco />} />
-                <Route path="/lista-cajas" element={<ListaCajas />} />
-                <Route path="/movimientos-globales" element={<ListaMovimientosGlobal />} />
-                <Route path="/movimientos" element={<Movimientos />} />
-                <Route path="/movimientos/:bancoId" element={<Movimientos />} />
-                <Route path="/caja" element={<Caja />} />
-                <Route path="*" element={<Navigate to="/login" />} />
-            </Routes>
+            <AppContent />
         </Router>
     );
 };
 
 export default App;
-
