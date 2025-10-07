@@ -1,10 +1,8 @@
 // src/components/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from "axios";
-import './Login.css';
 
-const Login = () => {
+export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -12,63 +10,80 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            // 🔹 Petición al backend para login
-            const response = await axios.post('http://localhost:3001/usuarios/login', { email, password });
+            const res = await fetch('http://localhost:3001/api/usuarios/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
 
-            // 🔹 Guardar token y datos de usuario en localStorage
-            const token = response.data.token;
-            const userData = response.data.user; // el backend debe enviarlo
+            let data;
 
-            if (!userData) {
-                alert('Error: el backend no está enviando los datos del usuario');
+            try {
+                data = await res.json(); // Intentamos parsear la respuesta
+            } catch (parseError) {
+                console.error("❌ Error parseando respuesta:", parseError);
+                alert("❌ Error: respuesta no válida del servidor");
                 return;
             }
 
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('user', JSON.stringify(userData));
-
-            alert('Inicio de sesión exitoso');
-            navigate('/dashboard');
+            if (res.ok) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                alert('✅ Login exitoso');
+                navigate('/dashboard');
+            } else {
+                // Si no hay message, mostramos un texto genérico
+                alert(`❌ Error: ${data.message || 'Credenciales inválidas o error en el servidor'}`);
+            }
         } catch (error) {
-            console.error('Error al iniciar sesión:', error);
-            alert(error.response?.data?.message || 'Error al iniciar sesión');
+            console.error('Error en login:', error);
+            alert('❌ Error en el servidor');
         }
     };
 
     return (
-        <div className="container d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-            <div className="card p-4" style={{ width: '400px' }}>
-                <h2 className="text-center mb-4">Iniciar Sesión</h2>
-                <form onSubmit={handleLogin}>
-                    <div className="form-group d-flex align-items-center mb-3 ">
-                        <label htmlFor="email" className="me-3" style={{ width: '150px', textAlign: 'right' }}>Correo Electrónico</label>
-                        <input
-                            type="email"
-                            id="email"
-                            className="form-control"
-                            placeholder="Ingresa tu correo"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+        <div className="container mt-5">
+            <div className="row justify-content-center">
+                <div className="col-md-4">
+                    <div className="card shadow-sm">
+                        <div className="card-body">
+                            <h3 className="text-center mb-4">Iniciar Sesión</h3>
+                            <form onSubmit={handleLogin}>
+                                <div className="mb-3">
+                                    <label htmlFor="email" className="form-label">Email</label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        className="form-control"
+                                        placeholder="Introduce tu email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="password" className="form-label">Contraseña</label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        className="form-control"
+                                        placeholder="Introduce tu contraseña"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="d-grid">
+                                    <button type="submit" className="btn btn-primary">
+                                        Iniciar sesión
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    <div className="form-group d-flex align-items-center mb-3">
-                        <label htmlFor="password" className="me-3" style={{ width: '150px', textAlign: 'right' }}>Contraseña</label>
-                        <input
-                            type="password"
-                            id="password"
-                            className="form-control"
-                            placeholder="Ingresa tu contraseña"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary w-100">Iniciar Sesión</button>
-                </form>
+                </div>
             </div>
         </div>
     );
-};
+}
 
-export default Login;

@@ -1,8 +1,7 @@
-// routes/rol.js
 const express = require('express');
 const router = express.Router();
-const Rol = require('../models/Rol'); // Importa el modelo corregido
-
+const Rol = require('../models/Rol');
+const { verificarToken, autorizarRoles } = require('../middleware/auth');
 
 // GET /api/roles - Obtener todos los roles
 router.get('/', async (req, res) => {
@@ -14,18 +13,22 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST /api/roles - Crear un nuevo rol
-router.post('/', async (req, res) => {
-    const rol = new Rol({
-        nombre: req.body.nombre // Viene del frontend
-    });
-    try {
-        const newRol = await rol.save();
-        res.status(201).json(newRol);
-    } catch (err) {
-        // Código 400 para errores del cliente (ej. rol ya existe)
-        res.status(400).json({ message: err.message });
+// POST /api/roles - Crear un nuevo rol (solo Administrador)
+router.post(
+    '/',
+    verificarToken,
+    autorizarRoles('Administrador'),
+    async (req, res) => {
+        const rol = new Rol({
+            nombre: req.body.nombre
+        });
+        try {
+            const newRol = await rol.save();
+            res.status(201).json(newRol);
+        } catch (err) {
+            res.status(400).json({ message: err.message });
+        }
     }
-});
+);
 
 module.exports = router;

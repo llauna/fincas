@@ -17,6 +17,8 @@ import Movimientos from './components/Finanzas/Movimientos';
 import Caja from './components/Finanzas/Caja';
 import ListaCajas from './components/Finanzas/ListaCajas';
 import ListaMovimientosGlobal from './components/Finanzas/ListaMovimientosGlobal';
+import Perfil from './components//Perfil';
+import EditarUsuario from './components/Usuario/EditarUsuario';
 
 const AppContent = () => {
     const location = useLocation();
@@ -29,7 +31,10 @@ const AppContent = () => {
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/perfil" element={<Perfil token={localStorage.getItem('token')} />} />
+
                     <Route path="/usuario" element={<Empleados />} />
+                    <Route path="/edirtar/:id" element={<EditarUsuario token={localStorage.getItem('token')} />} />
                     <Route path="/empresa" element={<Empresa />} />
                     <Route path="/proveedores" element={<Proveedores />} />
                     <Route path="/administradorFincas" element={<AdministradorFincas />} />
