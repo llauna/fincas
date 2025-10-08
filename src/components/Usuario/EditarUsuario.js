@@ -1,51 +1,88 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function EditarUsuario({ token }) {
     const { id } = useParams();
     const navigate = useNavigate();
     const [usuario, setUsuario] = useState(null);
     const [roles, setRoles] = useState([]);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
+        console.log("Token usado en EditarUsuario:", token);
+        console.log("ID recibido desde la URL:", id);
+
         // Obtener datos del usuario
-        fetch(`http://localhost:3001/api/usuarios/${id}`, {
+        axios.get(`http://localhost:3001/api/usuarios/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
-            .then(res => res.json())
-            .then(data => setUsuario(data))
-            .catch(err => console.error(err));
+            .then(res => {
+                const user = res.data.usuario ? res.data.usuario : res.data;
+                setUsuario({
+                    ...user,
+                    rol: user.rol?._id || user.rol
+                });
+            })
+            .catch(err => {
+                if (err.response) {
+                    if (err.response.status === 403) setError("No tienes permisos para editar este usuario.");
+                    else if (err.response.status === 404) setError("Usuario no encontrado.");
+                    else setError("Error al obtener el usuario.");
+                } else {
+                    setError("Error de conexión con el servidor.");
+                }
+            });
 
         // Obtener lista de roles
-        fetch('http://localhost:3001/api/roles', {
+        axios.get('http://localhost:3001/api/roles', {
             headers: { 'Authorization': `Bearer ${token}` }
         })
-            .then(res => res.json())
-            .then(data => setRoles(data))
-            .catch(err => console.error(err));
+            .then(res => setRoles(res.data))
+            .catch(err => {
+                setError("Error al obtener la lista de roles.");
+            });
     }, [id, token]);
 
     const handleChange = (e) => {
-        setUsuario({ ...usuario, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setUsuario({ ...usuario, [name]: value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        fetch(`http://localhost:3001/api/usuarios/${id}`, {
-            method: 'PUT',
+        console.log("Datos enviados para actualizar:", usuario);
+
+        axios.put(`http://localhost:3001/api/usuarios/${id}`, usuario, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(usuario)
+            }
         })
-            .then(res => res.json())
             .then(() => {
                 alert('Usuario actualizado correctamente');
                 navigate('/perfil');
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                if (err.response) {
+                    if (err.response.status === 403) setError("No tienes permisos para actualizar este usuario.");
+                    else if (err.response.status === 404) setError("Usuario no encontrado.");
+                    else setError("Error al actualizar el usuario.");
+                } else {
+                    setError("Error de conexión con el servidor.");
+                }
+            });
     };
+
+    if (error) {
+        return (
+            <div className="container mt-4">
+                <h2>Error</h2>
+                <p className="text-danger">{error}</p>
+                <button className="btn btn-secondary" onClick={() => navigate('/perfil')}>Volver</button>
+            </div>
+        );
+    }
 
     if (!usuario) return <p>Cargando usuario...</p>;
 
@@ -90,7 +127,7 @@ export default function EditarUsuario({ token }) {
                     <select
                         name="rol"
                         className="form-select"
-                        value={usuario.rol?._id || ''}
+                        value={usuario.rol || ''}
                         onChange={handleChange}
                     >
                         {roles.map(r => (

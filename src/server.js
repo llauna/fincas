@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-const usuarioRoutes = require('./routes/usuarios');
+const usuariosRoutes = require('./routes/usuarios');
 const gestionRoutes = require('./routes/gestion');
 const propiedadesRouter = require('./routes/propiedades');
 const administradorRouter = require('./routes/administradorFincas');
@@ -34,7 +34,7 @@ db.once('open', () => {
 });
 
 // Rutas de la API
-app.use('/api/usuarios', usuarioRoutes); // Login y perfil
+app.use('/api/usuarios', usuariosRoutes); // Login y perfil
 app.use('/api/gestions', gestionRoutes);
 app.use('/api/administradorfincas', administradorRouter);
 app.use('/api/propiedades', propiedadesRouter);

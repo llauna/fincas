@@ -1,5 +1,6 @@
+//App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Shared/Navbar';
 import Login from './components/Usuario/Login/Login';
 import Dashboard from './components/Usuario/Login/Dashboard';
@@ -19,9 +20,11 @@ import ListaCajas from './components/Finanzas/ListaCajas';
 import ListaMovimientosGlobal from './components/Finanzas/ListaMovimientosGlobal';
 import Perfil from './components//Perfil';
 import EditarUsuario from './components/Usuario/EditarUsuario';
+import ConfiguracionRoles from './components/Roles/ConfiguracionRoles';
 
-const AppContent = () => {
+export default function App()  {
     const location = useLocation();
+    const token = localStorage.getItem('token');
     const hideNavbar = location.pathname === "/login"; // Ocultar navbar en login
 
     return (
@@ -30,11 +33,15 @@ const AppContent = () => {
             <div className="main-content">
                 <Routes>
                     <Route path="/login" element={<Login />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/perfil" element={<Perfil token={localStorage.getItem('token')} />} />
+
+                    {/* Dashboard principal */}
+                    <Route path="/dashboard" element={<Dashboard token={token} />} />
+
+                    {/* Administración de usuarios */}
+                    <Route path="/perfil" element={<Perfil token={token} />} />
+                    <Route path="/editar/:id" element={<EditarUsuario token={token} />} />
 
                     <Route path="/usuario" element={<Empleados />} />
-                    <Route path="/edirtar/:id" element={<EditarUsuario token={localStorage.getItem('token')} />} />
                     <Route path="/empresa" element={<Empresa />} />
                     <Route path="/proveedores" element={<Proveedores />} />
                     <Route path="/administradorFincas" element={<AdministradorFincas />} />
@@ -43,6 +50,10 @@ const AppContent = () => {
                     <Route path="/comunidades" element={<Comunidades />} />
                     <Route path="/roles" element={<Roles />} />
                     <Route path="/configuracion" element={<Configuracion />} />
+
+                    {/* Configuración - Gestión de roles */}
+                    <Route path="/configuracion/roles" element={<ConfiguracionRoles token={token} />} />
+
                     <Route path="/banco" element={<Banco />} />
                     <Route path="/lista-cajas" element={<ListaCajas />} />
                     <Route path="/movimientos-globales" element={<ListaMovimientosGlobal />} />
@@ -55,13 +66,3 @@ const AppContent = () => {
         </>
     );
 };
-
-const App = () => {
-    return (
-        <Router>
-            <AppContent />
-        </Router>
-    );
-};
-
-export default App;
