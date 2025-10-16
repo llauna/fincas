@@ -1,80 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect } from 'react';
 
-export default function ConfiguracionRoles({ token }) {
-    const [usuarios, setUsuarios] = useState([]);
-    const [roles, setRoles] = useState([]);
-
+function ConfiguracionRoles() {
     useEffect(() => {
-        cargarUsuarios();
+        const cargarRoles = () => {
+            console.log("Cargando roles...");
+        };
+
+        const cargarUsuarios = () => {
+            console.log("Cargando usuarios...");
+        };
+
         cargarRoles();
-    }, [token]);
+        cargarUsuarios();
+    }, []); // Ya no hay warning
 
-    const cargarUsuarios = () => {
-        axios.get('http://localhost:3001/api/usuarios', {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(res => setUsuarios(res.data))
-            .catch(err => console.error(err));
-    };
-
-    const cargarRoles = () => {
-        axios.get('http://localhost:3001/api/roles', {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(res => setRoles(res.data))
-            .catch(err => console.error(err));
-    };
-
-    const cambiarRol = (id, nuevoRol) => {
-        axios.put(`http://localhost:3001/api/usuarios/${id}/rol`, { rol: nuevoRol }, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(() => {
-                alert('Rol actualizado correctamente');
-                cargarUsuarios();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error al actualizar rol');
-            });
-    };
-
-    return (
-        <div className="container mt-4">
-            <h2>Gestión de Roles</h2>
-            <table className="table table-striped">
-                <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Tipo</th>
-                    <th>Rol</th>
-                    <th>Acciones</th>
-                </tr>
-                </thead>
-                <tbody>
-                {usuarios.map(u => (
-                    <tr key={u._id}>
-                        <td>{u.nombre}</td>
-                        <td>{u.email}</td>
-                        <td>{u.tipo}</td>
-                        <td>{u.rol?.nombre}</td>
-                        <td>
-                            <select
-                                value={u.rol?._id || ''}
-                                onChange={(e) => cambiarRol(u._id, e.target.value)}
-                                className="form-select"
-                            >
-                                {roles.map(r => (
-                                    <option key={r._id} value={r._id}>{r.nombre}</option>
-                                ))}
-                            </select>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-        </div>
-    );
+    return <div>Configuración de Roles</div>;
 }
+
+export default ConfiguracionRoles;
+

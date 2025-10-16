@@ -1,3 +1,4 @@
+//src/routes/usuarios.js
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -92,23 +93,49 @@ router.delete('/:id', verificarToken, async (req, res) => {
     }
 });
 
-// 📌 POST /api/usuarios/login - Autenticación
+// 📌 POST /api/usuarios/login - Autenticación con logs y validaciones
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
+    console.log("📩 Datos recibidos en /login:", { email, password });
+
     try {
+        // Buscar usuario por email
         const usuario = await Usuario.findOne({ email }).populate('rol');
+        console.log("🔍 Usuario encontrado:", usuario);
+
         if (!usuario) {
+            console.warn("⚠ Usuario no encontrado");
             return res.status(400).json({ message: 'Usuario no encontrado' });
         }
+
+        // Validar contraseña
+        if (!usuario.password) {
+            console.error("❌ El usuario no tiene contraseña almacenada");
+            return res.status(500).json({ message: 'Error: contraseña no definida en el servidor' });
+        }
+
         const esPasswordValida = await bcrypt.compare(password, usuario.password);
+        console.log("🔑 Contraseña válida:", esPasswordValida);
+
         if (!esPasswordValida) {
+            console.warn("⚠ Contraseña incorrecta");
             return res.status(400).json({ message: 'Contraseña incorrecta' });
         }
+
+        // Proteger acceso a rol.nombre
+        const rolNombre = usuario.rol?.nombre || 'SinRol';
+        console.log("👤 Rol del usuario:", rolNombre);
+
+        // Generar token
         const token = jwt.sign(
-            { id: usuario._id, tipo: usuario.tipo, rol: usuario.rol.nombre },
+            { id: usuario._id, tipo: usuario.tipo, rol: rolNombre },
             process.env.JWT_SECRET || 'secreto',
             { expiresIn: '8h' }
         );
+
+        console.log("✅ Token generado correctamente");
+
+        // Respuesta final
         res.json({
             token,
             user: {
@@ -116,11 +143,13 @@ router.post('/login', async (req, res) => {
                 nombre: usuario.nombre,
                 email: usuario.email,
                 tipo: usuario.tipo,
-                rol: usuario.rol.nombre
+                rol: rolNombre
             }
         });
+
     } catch (error) {
-        res.status(500).json({ message: 'Error en el servidor' });
+        console.error("❌ Error en /login:", error);
+        res.status(500).json({ message: 'Error en el servidor', error: error.message });
     }
 });
 

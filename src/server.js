@@ -23,8 +23,8 @@ app.use(express.json());
 
 // Conectar a MongoDB
 mongoose.connect('mongodb://localhost:27017/Fincas', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+    //useNewUrlParser: true,
+    //useUnifiedTopology: true
 });
 
 const db = mongoose.connection;
@@ -53,6 +53,4 @@ app.use((req, res) => {
 // Iniciar el servidor
 app.listen(3001, () => {
     console.log('🚀 Servidor corriendo en http://localhost:3001');
-    console.log('📌 Login disponible en: POST /api/usuarios/login');
-    console.log('📌 Perfil disponible en: GET /api/usuarios/perfil (requiere token)');
 });
