@@ -17,9 +17,8 @@ export default function Login() {
             });
 
             let data;
-
             try {
-                data = await res.json(); // Intentamos parsear la respuesta
+                data = await res.json();
             } catch (parseError) {
                 console.error("❌ Error parseando respuesta:", parseError);
                 alert("❌ Error: respuesta no válida del servidor");
@@ -27,12 +26,15 @@ export default function Login() {
             }
 
             if (res.ok) {
+                // 📌 Guardar token y usuario con rol en localStorage
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
+
+                console.log("✅ Usuario logueado:", data.user);
+
                 alert('✅ Login exitoso');
-                navigate('/dashboard');
+                navigate('/dashboard'); // Ir a la vista de administración
             } else {
-                // Si no hay message, mostramos un texto genérico
                 alert(`❌ Error: ${data.message || 'Credenciales inválidas o error en el servidor'}`);
             }
         } catch (error) {
@@ -86,4 +88,3 @@ export default function Login() {
         </div>
     );
 }
-

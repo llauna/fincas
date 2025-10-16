@@ -1,3 +1,4 @@
+// src/components/Perfil.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -17,37 +18,41 @@ export default function Perfil({ token }) {
     const navigate = useNavigate();
 
     const API_URL = 'http://localhost:3001/api/usuarios';
+    const API_ROLES_URL = 'http://localhost:3001/api/roles';
 
+    // 📌 Obtener rol del usuario logueado desde localStorage
+    const rolUsuario = JSON.parse(localStorage.getItem('user'))?.rol || '';
+
+    // Cargar usuarios y roles
     useEffect(() => {
-        // Función para cargar usuarios
         const cargarUsuarios = () => {
             axios.get(API_URL, {
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(res => setUsuarios(res.data))
-                .catch(err => console.error(err));
+                .catch(err => console.error("❌ Error cargando usuarios:", err));
         };
 
-        // Función para cargar roles
         const cargarRoles = () => {
-            axios.get('http://localhost:3001/api/roles', {
+            axios.get(API_ROLES_URL, {
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(res => setRoles(res.data))
-                .catch(err => console.error(err));
+                .catch(err => console.error("❌ Error cargando roles:", err));
         };
 
         cargarUsuarios();
         cargarRoles();
-    }, [token]); // ✅ Solo depende de token
+    }, [token]);
 
+    // Manejar cambios en el formulario
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Alta de usuario
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Validaciones extra
         if (!formData.nombre.trim()) return alert("El nombre es obligatorio");
         if (!formData.email.includes('@')) return alert("Email inválido");
         if (formData.password.length < 6) return alert("La contraseña debe tener al menos 6 caracteres");
@@ -57,28 +62,33 @@ export default function Perfil({ token }) {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(() => {
-                alert('Usuario creado correctamente');
+                alert('✅ Usuario creado correctamente');
                 setFormData({ nombre: '', email: '', password: '', tipo: 'empleado', rol: '' });
                 setShowModal(false);
-                // Recargar usuarios después de alta
                 axios.get(API_URL, { headers: { Authorization: `Bearer ${token}` } })
                     .then(res => setUsuarios(res.data));
             })
             .catch(err => {
-                console.error(err);
+                console.error("❌ Error creando usuario:", err);
                 alert('Error al crear usuario');
             });
     };
 
+    // Eliminar usuario
     const eliminarUsuario = (id) => {
         if (window.confirm('¿Seguro que quieres eliminar este usuario?')) {
             axios.delete(`${API_URL}/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(() => setUsuarios(usuarios.filter(u => u._id !== id)))
-                .catch(err => console.error(err));
+                .catch(err => console.error("❌ Error eliminando usuario:", err));
         }
     };
+
+    // 📌 Funciones para verificar permisos en frontend
+    const puedeCrear = rolUsuario === 'Administrador';
+    const puedeEditar = rolUsuario === 'Administrador' || rolUsuario === 'Supervisor';
+    const puedeEliminar = rolUsuario === 'Administrador';
 
     return (
         <div className="container mt-4">
@@ -92,7 +102,7 @@ export default function Perfil({ token }) {
                     <th>Email</th>
                     <th>Tipo</th>
                     <th>Rol</th>
-                    <th>Acciones</th>
+                    {puedeEditar || puedeEliminar ? <th>Acciones</th> : null}
                 </tr>
                 </thead>
                 <tbody>
@@ -101,20 +111,28 @@ export default function Perfil({ token }) {
                         <td>{u.nombre}</td>
                         <td>{u.email}</td>
                         <td>{u.tipo}</td>
-                        <td>{u.rol?.nombre}</td>
-                        <td>
-                            <button className="btn btn-warning btn-sm me-2" onClick={() => navigate(`/editar/${u._id}`)}>Editar</button>
-                            <button className="btn btn-danger btn-sm" onClick={() => eliminarUsuario(u._id)}>Eliminar</button>
-                        </td>
+                        <td>{u.rol?.nombre || 'Sin rol'}</td>
+                        {puedeEditar || puedeEliminar ? (
+                            <td>
+                                {puedeEditar && (
+                                    <button className="btn btn-warning btn-sm me-2" onClick={() => navigate(`/editar/${u._id}`)}>Editar</button>
+                                )}
+                                {puedeEliminar && (
+                                    <button className="btn btn-danger btn-sm" onClick={() => eliminarUsuario(u._id)}>Eliminar</button>
+                                )}
+                            </td>
+                        ) : null}
                     </tr>
                 ))}
                 </tbody>
             </table>
 
-            {/* Botones Volver y Alta */}
+            {/* Botones */}
             <div className="mt-3">
                 <button className="btn btn-secondary me-2" onClick={() => navigate('/dashboard')}>Volver</button>
-                <button className="btn btn-success" onClick={() => setShowModal(true)}>Alta</button>
+                {puedeCrear && (
+                    <button className="btn btn-success" onClick={() => setShowModal(true)}>Alta</button>
+                )}
             </div>
 
             {/* Modal de alta */}
