@@ -1,6 +1,5 @@
 // RolForm.jsx (En tu proyecto React)
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Los valores de enum deben estar disponibles en el frontend
@@ -8,7 +7,6 @@ const ROL_OPTIONS = ['Administrador', 'Propietario', 'Usuario_1', 'Usuario_2'];
 
 function RolForm() {
 
-    const navigate = useNavigate();
     const [selectedRol, setSelectedRol] = useState(ROL_OPTIONS[0]);
     const [message, setMessage] = useState('');
 
@@ -25,16 +23,13 @@ function RolForm() {
         }
     };
 
-    const handleGoBack = () => {
-        navigate(-1);
-    };
-
 
     return (
         <div>
-                <form onSubmit={handleSubmit}>
-                    <h3>Asignar Nuevo Rol</h3>
+                <form onSubmit={handleSubmit} className="p-3 border rounded bg-light">
+                    <h3 className="mb-3">Asignar Nuevo Rol</h3>
                     <select
+                        className="form-select mb-3"
                         value={selectedRol}
                         onChange={(e) => setSelectedRol(e.target.value)}
                         required
@@ -43,13 +38,9 @@ function RolForm() {
                             <option key={rol} value={rol}>{rol}</option>
                         ))}
                     </select>
-                    <button type="submit">Crear Rol</button>
+                    <button type="submit" className="btn btn-primary w-100 mb-3">Crear Rol</button>
                     {message && <p>{message}</p>}
                 </form>
-            {/* Botón volver */}
-            <div className="text-center mt-4">
-                <button onClick={handleGoBack} className="btn btn-secondary">Volver</button>
-            </div>
         </div>
 
     );
