@@ -1,5 +1,6 @@
 // src/components/Menu.js
 import React from 'react';
+import { Link } from 'react-router-dom';
 import usePerfil from '../hooks/usePerfil';
 
 export default function Menu({ token }) {
@@ -11,23 +12,31 @@ export default function Menu({ token }) {
     const opcionesMenu = [];
 
     if (perfil.rol === "Administrador") {
-        opcionesMenu.push("Panel de Administración", "Gestión de Usuarios", "Reportes");
+        opcionesMenu.push({ nombre: "Panel de Administración", ruta: "/admin" });
+        opcionesMenu.push({ nombre: "Gestión de Usuarios", ruta: "/perfil" });
+        opcionesMenu.push({ nombre: "Reportes", ruta: "/reportes" });
+        opcionesMenu.push({ nombre: "Configuración", ruta: "/configuracion" }); // ✅ enlace a Configuración
     }
     if (perfil.rol === "Propietario") {
-        opcionesMenu.push("Mis Propiedades", "Gestión de Inquilinos");
+        opcionesMenu.push({ nombre: "Mis Propiedades", ruta: "/propiedades" });
+        opcionesMenu.push({ nombre: "Gestión de Inquilinos", ruta: "/inquilinos" });
     }
     if (perfil.rol === "Usuario_1") {
-        opcionesMenu.push("Mis Reservas", "Soporte");
+        opcionesMenu.push({ nombre: "Mis Reservas", ruta: "/reservas" });
+        opcionesMenu.push({ nombre: "Soporte", ruta: "/soporte" });
     }
     if (perfil.rol === "Usuario_2") {
-        opcionesMenu.push("Ver Información", "Soporte");
+        opcionesMenu.push({ nombre: "Ver Información", ruta: "/informacion" });
+        opcionesMenu.push({ nombre: "Soporte", ruta: "/soporte" });
     }
 
     if (perfil.tipo === "empleado") {
-        opcionesMenu.push("Tareas Asignadas", "Calendario de Trabajo");
+        opcionesMenu.push({ nombre: "Tareas Asignadas", ruta: "/tareas" });
+        opcionesMenu.push({ nombre: "Calendario de Trabajo", ruta: "/calendario" });
     }
     if (perfil.tipo === "cliente") {
-        opcionesMenu.push("Mis Pagos", "Historial de Servicios");
+        opcionesMenu.push({ nombre: "Mis Pagos", ruta: "/pagos" });
+        opcionesMenu.push({ nombre: "Historial de Servicios", ruta: "/historial" });
     }
 
     return (
@@ -35,7 +44,9 @@ export default function Menu({ token }) {
             <h2>Menú de {perfil.nombre}</h2>
             <ul>
                 {opcionesMenu.map((opcion, index) => (
-                    <li key={index}>{opcion}</li>
+                    <li key={index}>
+                        <Link to={opcion.ruta}>{opcion.nombre}</Link>
+                    </li>
                 ))}
             </ul>
         </div>

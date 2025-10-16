@@ -52,7 +52,7 @@ export default function App()  {
                     <Route path="/configuracion" element={<Configuracion />} />
 
                     {/* Configuración - Gestión de roles */}
-                    <Route path="/configuracion/roles" element={<ConfiguracionRoles token={token} />} />
+                    <Route path="/configuracion/roles" element={<ConfiguracionRoles token={localStorage.getItem('token')} />} />
 
                     <Route path="/banco" element={<Banco />} />
                     <Route path="/lista-cajas" element={<ListaCajas />} />
