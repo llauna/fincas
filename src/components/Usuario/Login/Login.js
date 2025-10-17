@@ -51,24 +51,25 @@ export default function Login() {
                         <div className="card-body">
                             <h3 className="text-center mb-4">Iniciar Sesión</h3>
                             <form onSubmit={handleLogin}>
-                                <div className="mb-3">
-                                    <label htmlFor="email" className="form-label">Email</label>
+                                <div className="mb-3 d-flex align-items-center">
+                                    <label htmlFor="email" className="form-label me-2">Email</label>
                                     <input
                                         type="email"
                                         id="email"
-                                        className="form-control"
+                                        className="form-control flex-grow-1"
                                         placeholder="Introduce tu email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
+                                        style={{marginLeft: '39px'}}
                                     />
                                 </div>
-                                <div className="mb-3">
-                                    <label htmlFor="password" className="form-label">Contraseña</label>
+                                <div className="mb-3 d-flex align-items-center">
+                                    <label htmlFor="password" className="form-label me-2">Contraseña</label>
                                     <input
                                         type="password"
                                         id="password"
-                                        className="form-control"
+                                        className="form-control flex-grow-1"
                                         placeholder="Introduce tu contraseña"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}

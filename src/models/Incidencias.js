@@ -1,10 +1,26 @@
 const mongoose = require('mongoose');
 
-const IncidenciaSchema = new mongoose.Schema({
-    descripcion:   { type: String, required: true },
-    estado:        { type: String, enum: ['Abierta', 'En proceso', 'Resuelta'], default: 'Abierta' },
-    fechaApertura: { type: Date, required: true, default: Date.now },
-    prioridad:     { type: String, enum: ['Alta', 'Media', 'Baja'], required: true }
-});
+const incidenciaSchema = new mongoose.Schema({
+    idIncidencia: { type: String, required: true, unique: true, trim: true },
+    fechaHoraReporte: { type: Date, required: true, default: Date.now },
+    reportadoPor: {
+        nombre: { type: String, required: true, trim: true },
+        contacto: { type: String, required: true, trim: true }
+    },
+    ubicacionEspecifica: { type: String, required: true, trim: true },
+    titulo: { type: String, required: true, trim: true },
+    descripcionDetallada: { type: String, required: true, trim: true },
+    gravedadImpacto: {
+        type: String,
+        enum: ['Baja', 'Media', 'Alta', 'Crítica'],
+        required: true
+    },
+    categoria: { type: String, required: true, trim: true },
 
-module.exports = mongoose.model('Incidencia', IncidenciaSchema);
+},
+    {
+    timestamps: true // añade createdAt y updatedAt automáticamente
+    }
+);
+
+module.exports = mongoose.model('Incidencia', incidenciaSchema);

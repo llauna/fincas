@@ -1,29 +1,59 @@
-/* Estilos generales */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f9;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
 /* Contenedor del formulario */
-.form-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
+.container {
+    max-width: 600px; /* Ajusta el ancho del cuadro */
+    margin: auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.form-group label {
-    width: 120px; /* Ancho fijo para todos los labels */
-    text-align: right; /* Alinea el texto a la derecha */
-    margin-right: 10px; /* Separación entre el label y el input */
+/* Estilo de los labels */
+.form-label {
+    font-size: 14px; /* Tamaño de fuente */
+    line-height: 2.5; /* Ajusta la altura de línea para alineación vertical */
+    margin-right: 10px; /* Espacio entre el label y el input */
+    display: inline-block; /* Asegura que el label esté en línea con el input */
 }
 
-.form-group input {
-    flex: 1; /* El input ocupa el espacio restante */
+/* Estilo de los inputs */
+.form-control {
+    width: calc(100% - 120px); /* Ajusta el ancho del input para que no se superponga con el label */
+    display: inline-block; /* Asegura que el input esté en línea con el label */
+    padding: 8px; /* Ajusta el padding */
+    font-size: 14px; /* Tamaño de fuente */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Botón de inicio de sesión */
+.btn-primary {
+    padding: 8px;
+    font-size: 14px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Ajuste general para el contenedor de los inputs */
+.d-flex {
+    display: flex; /* Activa flexbox */
+    align-items: center; /* Alinea verticalmente el label y el input */
+}
+
+/* Margen entre el label y el input */
+.me-2 {
+    margin-right: 10px; /* Ajusta el espacio entre el label y el input */
+}
+
+/* Ajuste del input */
+.flex-grow-1 {
+    flex-grow: 1; /* El input ocupa el espacio restante */
 }
 
