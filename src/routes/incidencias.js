@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Incidencia = require('../models/Incidencia'); // Modelo de la incidencia
+const Incidencia = require('../models/Incidencias'); // Modelo de la incidencia
 
 // Obtener todas las incidencias
 router.get('/', async (req, res) => {

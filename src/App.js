@@ -21,7 +21,9 @@ import ListaMovimientosGlobal from './components/Finanzas/ListaMovimientosGlobal
 import Perfil from './components//Perfil';
 import EditarUsuario from './components/Usuario/EditarUsuario';
 import ConfiguracionRoles from './components/Roles/ConfiguracionRoles';
-import Incidencias from './components/Incidencias/Incidencias';
+import ListaIncidencias from './components/Incidencias/ListaIncidencias';
+import AbrirIncidencia from './components/Incidencias/AbrirIncidencia';
+
 
 export default function App()  {
     const location = useLocation();
@@ -60,7 +62,13 @@ export default function App()  {
                     <Route path="/movimientos-globales" element={<ListaMovimientosGlobal />} />
                     <Route path="/movimientos" element={<Movimientos />} />
                     <Route path="/movimientos/:bancoId" element={<Movimientos />} />
-                    <Route path="/incidencias" element={<Incidencias />} />
+
+                    {/* Ruta para ver incidencias */}
+                    <Route path="/incidencias/:propietarioId" element={token ? <ListaIncidencias /> : <Navigate to="/login" />} />
+
+                    {/* Ruta para abrir una nueva incidencia */}
+                    <Route path="/incidencias/abrir/:propietarioId" element={token ? <AbrirIncidencia /> : <Navigate to="/login" />} />
+
                     <Route path="/caja" element={<Caja />} />
                     <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>

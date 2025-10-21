@@ -1,23 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
-export default function IncidenciasList() {
+export default function ListaIncidencias() {
     const navigate = useNavigate();
-    const [incidencias, setIncidencias] = useState([]); // Inicializa como un array vacío
+    const { propietarioId } = useParams(); // Obtener el propietarioId desde la URL
+    const [incidencias, setIncidencias] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/incidencias') // Ruta del backend
-            .then((res) => res.json())
-            .then((data) => {
-                if (Array.isArray(data)) {
-                    setIncidencias(data); // Solo actualiza si la respuesta es un array
-                } else {
-                    console.error('La respuesta no es un array:', data);
-                    setIncidencias([]); // Si no es un array, inicializa como vacío
-                }
-            })
-            .catch((error) => console.error('Error al obtener incidencias:', error));
-    }, []);
+        const fetchIncidencias = async () => {
+            try {
+                const res = await fetch(`http://localhost:3001/api/incidencias/propietario/${propietarioId}`);
+                const data = await res.json();
+                setIncidencias(data);
+            } catch (error) {
+                console.error('Error al obtener las incidencias:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchIncidencias();
+    }, [propietarioId]);
+
+    if (loading) {
+        return <p>Cargando incidencias...</p>;
+    }
 
     const handleGoBack = () => {
         navigate(-1);

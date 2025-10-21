@@ -3,7 +3,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Usuario = require('../models/Usuario');
-
+const Rol = require('../models/Rol');
 const router = express.Router();
 const SECRET_KEY = 'mi_clave_secreta'; // Usa una variable de entorno en producción
 
@@ -30,20 +30,37 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Buscar el usuario
-        const usuario = await Usuario.findOne({ email });
-        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+        // 1. Buscar usuario por email
+        const usuario = await Usuario.findOne({ email }).populate('roles'); // roles es un array de ObjectId
+        if (!usuario) {
+            return res.status(401).json({ message: 'Usuario no encontrado' });
+        }
 
-        // Verificar la contraseña
-        const isMatch = await bcrypt.compare(password, usuario.password);
-        if (!isMatch) return res.status(401).json({ error: 'Contraseña incorrecta' });
+        // 2. Validar contraseña (ejemplo con bcrypt)
+        const bcrypt = require('bcrypt');
+        const esValida = await bcrypt.compare(password, usuario.password);
+        if (!esValida) {
+            return res.status(401).json({ message: 'Contraseña incorrecta' });
+        }
 
-        // Generar el token JWT
-        const token = jwt.sign({ id: usuario._id, rol: usuario.rol }, SECRET_KEY, { expiresIn: '1h' });
+        // 3. Extraer nombres de roles
+        const nombresRoles = usuario.roles.map(r => r.nombre);
 
+        // 4. Crear payload del token
+        const payload = {
+            id: usuario._id,
+            email: usuario.email,
+            roles: nombresRoles
+        };
+
+        // 5. Firmar token con la misma clave que usa verificarToken
+        const token = jwt.sign(payload, process.env.JWT_SECRET || 'secreto', { expiresIn: '8h' });
+
+        // 6. Enviar token al cliente
         res.json({ token });
-    } catch (err) {
-        res.status(500).json({ error: 'Error al iniciar sesión' });
+    } catch (error) {
+        console.error('Error en login:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
     }
 });
 
@@ -53,7 +70,7 @@ const verificarToken = (req, res, next) => {
     if (!token) return res.status(403).json({ error: 'Token no proporcionado' });
 
     try {
-        const decoded = jwt.verify(token, SECRET_KEY);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secreto');
         req.usuario = decoded; // Agrega los datos del usuario al objeto req
         next();
     } catch (err) {

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+// components/Comunidad/Comunidades.js
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/propiedades.css';
@@ -19,31 +20,36 @@ const Comunidades = () => {
     const [editMode, setEditMode] = useState(false);
     const [editId, setEditId] = useState(null);
 
+    // ✅ URL correcta de tu API
     const API_URL = 'http://localhost:3001/api/comunidades';
-    const token = localStorage.getItem('authToken');
 
-    // Memorizar configuración de Axios para evitar recreaciones
-    const axiosConfig = useMemo(() => ({
-        headers: {
-            Authorization: token
-        }
-    }), [token]);
-
-    // 🔹 Cargar comunidades al montar el componente
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        console.log('📦 Token en localStorage:', token);
+        console.log('📡 Llamando a:', API_URL);
+
+        if (!token) {
+            console.warn('⚠ No hay token, redirigiendo a login...');
+            navigate('/login');
+            return;
+        }
+
         const fetchData = async () => {
             try {
-                const response = await axios.get(API_URL, axiosConfig);
+                const response = await axios.get(API_URL, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                console.log('✅ Datos recibidos:', response.data);
                 setComunidades(response.data);
             } catch (error) {
-                console.error('Error al obtener las comunidades:', error);
+                console.error('❌ Error al obtener las comunidades:', error);
                 setFormError(error.response?.data?.message || 'Error al obtener comunidades');
             } finally {
                 setLoading(false);
             }
         };
         fetchData();
-    }, [API_URL, axiosConfig]); // ✅ Incluimos dependencias
+    }, [navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,7 +59,6 @@ const Comunidades = () => {
         e.preventDefault();
         setFormError('');
 
-        // 🔹 Validación de duplicados en frontend
         const camposClave = {
             nombre: formData.nombre.trim().toLowerCase(),
             direccion: formData.direccion.trim().toLowerCase(),
@@ -72,33 +77,49 @@ const Comunidades = () => {
         }
 
         try {
+            const token = localStorage.getItem('token');
+            console.log('📡 POST/PUT a:', API_URL, 'con token:', token);
+
             if (editMode) {
-                await axios.put(`${API_URL}/${editId}`, formData, axiosConfig);
+                await axios.put(`${API_URL}/${editId}`, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
             } else {
-                await axios.post(API_URL, formData, axiosConfig);
+                await axios.post(API_URL, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
             }
+
             setFormData({ nombre: '', direccion: '', poblacion: '', cp: '', provincia: '' });
             setShowModal(false);
             setEditMode(false);
             setEditId(null);
 
-            // Recargar comunidades después de guardar
-            const response = await axios.get(API_URL, axiosConfig);
+            const response = await axios.get(API_URL, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setComunidades(response.data);
         } catch (error) {
-            console.error('Error al guardar la comunidad:', error);
-            const serverError = error.response?.data?.message || 'Error al guardar la comunidad.';
-            setFormError(serverError);
+            console.error('❌ Error al guardar la comunidad:', error);
+            setFormError(error.response?.data?.message || 'Error al guardar la comunidad.');
         }
     };
 
     const handleEliminar = async (id) => {
         try {
-            await axios.delete(`${API_URL}/${id}`, axiosConfig);
-            const response = await axios.get(API_URL, axiosConfig);
+            const token = localStorage.getItem('token');
+            console.log('📡 DELETE a:', `${API_URL}/${id}`, 'con token:', token);
+
+            await axios.delete(`${API_URL}/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const response = await axios.get(API_URL, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setComunidades(response.data);
         } catch (error) {
-            console.error('Error al eliminar la comunidad:', error);
+            console.error('❌ Error al eliminar la comunidad:', error);
         }
     };
 

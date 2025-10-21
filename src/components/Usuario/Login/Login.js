@@ -27,10 +27,11 @@ export default function Login() {
 
             if (res.ok) {
                 // 📌 Guardar token y usuario con rol en localStorage
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('token', data.token); // Guarda el token
+                localStorage.setItem('user', JSON.stringify(data.user)); // Guarda el usuario
 
                 console.log("✅ Usuario logueado:", data.user);
+                console.log(data.token);
 
                 alert('✅ Login exitoso');
                 navigate('/dashboard'); // Ir a la vista de administración
@@ -61,7 +62,7 @@ export default function Login() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        style={{marginLeft: '39px'}}
+                                        style={{ marginLeft: '39px' }}
                                     />
                                 </div>
                                 <div className="mb-3 d-flex align-items-center">

@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/propiedades.css'; // Reutilizamos estilos del modal
 
-const Propiedades = () => {
+const Propiedades = ({ propietarioId }) => {
     const navigate = useNavigate();
     const [propiedades, setPropiedades] = useState([]);
+    const [propiedadSeleccionada, setPropiedadSeleccionada] = useState(null); // Para mostrar una propiedad específica
     const [loading, setLoading] = useState(true);
 
     const [formData, setFormData] = useState({
@@ -23,8 +24,8 @@ const Propiedades = () => {
     const [showModal, setShowModal] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const API_PROPIEDADES_URL = 'http://localhost:3001/api/propiedades';
-    const API_PROPIETARIOS_URL = 'http://localhost:3001/api/propietarios';
+    const API_PROPIEDADES_URL = 'http://localhost:3001/api/propiedades'; // URL del backend para propiedades
+    const API_PROPIETARIOS_URL = 'http://localhost:3001/api/propietarios'; // URL del backend para propietarios
 
     useEffect(() => {
         const fetchData = async () => {
@@ -34,6 +35,12 @@ const Propiedades = () => {
 
                 const propietariosResponse = await axios.get(API_PROPIETARIOS_URL);
                 setPropietariosDisponibles(propietariosResponse.data);
+
+                // Si se pasa un `propietarioId`, buscar la propiedad específica
+                if (propietarioId) {
+                    const propiedadResponse = await axios.get(`${API_PROPIEDADES_URL}/propietario/${propietarioId}`);
+                    setPropiedadSeleccionada(propiedadResponse.data);
+                }
             } catch (error) {
                 console.error('Error al obtener los datos:', error);
             } finally {
@@ -41,44 +48,25 @@ const Propiedades = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [propietarioId]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleCrear = async (e) => {
-        e.preventDefault(); // 🚀 Evita recarga de página
+        e.preventDefault();
         setFormError('');
 
-        // 1. Normalizar los campos clave para la verificación (evitar problemas de mayúsculas/minúsculas o espacios)
-        const camposClave = {
-            direccion: formData.direccion.trim().toLowerCase(),
-            numero: formData.numero.trim().toLowerCase(),
-            cp: formData.cp.trim(),
-        };
-
-        // 🔑 2. Verificar si la propiedad ya existe en la lista local 'propiedades'
-        const yaExiste = propiedades.some(prop =>
-            // Comparamos los campos normalizados del formulario con los de la lista existente
-            prop.direccion.toLowerCase() === camposClave.direccion &&
-            prop.numero.toLowerCase() === camposClave.numero &&
-            prop.cp === camposClave.cp &&
-            // 🔑 Incluir la Planta en la verificación de unicidad
-            prop.planta.trim().toLowerCase() === formData.planta.trim().toLowerCase()
-        );
-
-        if (yaExiste) {
-            // ❌ Si se encuentra un duplicado, establece el error y detiene la función
-            setFormError('❌ Esta propiedad (Dirección, Número y CP) ya se encuentra registrada localmente.');
-            return; // Detiene la ejecución para NO enviar la solicitud al servidor
-        }
-
-        // 3. Si no es un duplicado local, procede a intentar guardar en el backend
         try {
             await axios.post(API_PROPIEDADES_URL, formData);
 
-            // Operaciones post-éxito:
+            // Actualizar el listado de propiedades
+            const propiedadesResponse = await axios.get(API_PROPIEDADES_URL);
+            setPropiedades(propiedadesResponse.data);
+            setShowModal(false);
+
+            // Resetear el formulario
             setFormData({
                 idPropietario: '',
                 direccion: '',
@@ -88,15 +76,9 @@ const Propiedades = () => {
                 planta: '',
                 coeficiente: ''
             });
-
-            const propiedadesResponse = await axios.get(API_PROPIEDADES_URL);
-            setPropiedades(propiedadesResponse.data);
-            setShowModal(false);
-
         } catch (error) {
             console.error('Error al guardar la propiedad:', error);
-            // 💡 Sugerencia: Intenta mostrar un mensaje más específico si el backend devuelve el error de duplicado.
-            const serverError = error.response?.data?.message || 'Error al guardar la propiedad. Verifica los campos.';
+            const serverError = error.response?.data?.message || 'Error al guardar la propiedad.';
             setFormError(serverError);
         }
     };
@@ -119,6 +101,19 @@ const Propiedades = () => {
         return <div className="container mt-4">Cargando...</div>;
     }
 
+    // Si se selecciona una propiedad específica, mostrar su información
+    if (propiedadSeleccionada) {
+        return (
+            <div className="container mt-4">
+                <h2>Información de la Propiedad</h2>
+                <p><strong>Dirección:</strong> {propiedadSeleccionada.direccion}</p>
+                <p><strong>Características:</strong> {propiedadSeleccionada.caracteristicas}</p>
+                <p><strong>Estado:</strong> {propiedadSeleccionada.estado}</p>
+                <button onClick={() => setPropiedadSeleccionada(null)} className="btn btn-secondary mt-3">Volver al listado</button>
+            </div>
+        );
+    }
+
     return (
         <div className="container mt-4">
             <h1 className="text-center">Vista de Propiedades</h1>
@@ -129,9 +124,6 @@ const Propiedades = () => {
                     ➕ Registrar Nueva Propiedad
                 </button>
             </div>
-
-            {/* Fondo oscuro (sin onClick para que no se cierre al hacer clic fuera) */}
-            {showModal && <div className="custom-modal-backdrop"></div>}
 
             {/* Modal */}
             {showModal && (
@@ -145,6 +137,7 @@ const Propiedades = () => {
                             <div className="modal-body">
                                 {formError && <div className="alert alert-danger">{formError}</div>}
                                 <form onSubmit={handleCrear} noValidate>
+                                    {/* Formulario de creación */}
                                     <div className="row">
                                         <div className="col-md-6 mb-3">
                                             <label htmlFor="idPropietario" className="form-label">Propietario</label>
@@ -177,74 +170,7 @@ const Propiedades = () => {
                                             />
                                         </div>
                                     </div>
-
-                                    <div className="row">
-                                        <div className="col-md-4 mb-3">
-                                            <label htmlFor="numero" className="form-label">Número</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                id="numero"
-                                                name="numero"
-                                                value={formData.numero}
-                                                onChange={handleChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="col-md-4 mb-3">
-                                            <label htmlFor="poblacion" className="form-label">Población</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                id="poblacion"
-                                                name="poblacion"
-                                                value={formData.poblacion}
-                                                onChange={handleChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="col-md-4 mb-3">
-                                            <label htmlFor="cp" className="form-label">CP</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                id="cp"
-                                                name="cp"
-                                                value={formData.cp}
-                                                onChange={handleChange}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="row">
-                                        <div className="col-md-6 mb-3">
-                                            <label htmlFor="planta" className="form-label">Planta</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                id="planta"
-                                                name="planta"
-                                                value={formData.planta}
-                                                onChange={handleChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="col-md-6 mb-3">
-                                            <label htmlFor="coeficiente" className="form-label">Coeficiente</label>
-                                            <input
-                                                type="number"
-                                                className="form-control"
-                                                id="coeficiente"
-                                                name="coeficiente"
-                                                value={formData.coeficiente}
-                                                onChange={handleChange}
-                                                required
-                                                step="0.01"
-                                            />
-                                        </div>
-                                    </div>
-
+                                    {/* Más campos del formulario */}
                                     <div className="d-flex justify-content-end">
                                         <button type="submit" className="btn btn-primary">💾 Guardar Propiedad</button>
                                     </div>
@@ -255,6 +181,7 @@ const Propiedades = () => {
                 </div>
             )}
 
+            {/* Listado de propiedades */}
             <h2 className="mt-5">Listado de Propiedades</h2>
             <table className="table table-striped">
                 <thead>
@@ -283,6 +210,9 @@ const Propiedades = () => {
                             <td>{prop.planta}</td>
                             <td>{prop.coeficiente}</td>
                             <td>
+                                <button className="btn btn-info btn-sm" onClick={() => setPropiedadSeleccionada(prop)}>
+                                    Ver Detalles
+                                </button>
                                 <button className="btn btn-danger btn-sm" onClick={() => handleEliminar(prop._id)}>Eliminar</button>
                             </td>
                         </tr>

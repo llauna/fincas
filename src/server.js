@@ -11,20 +11,29 @@ const administradorRouter = require('./routes/administradorFincas');
 const propietariosRouter = require('./routes/propietarios');
 const bancosRouter = require('./routes/bancos');
 const movimientosRoutes = require('./routes/movimientos');
-const comunidadesRouter = require('./routes/comunidades');
+const comunidadesRoutes = require('./routes/comunidades');
 const rolRoutes = require('./routes/rol');
 const cajaRoutes = require('./routes/caja');
+const incidenciasRoutes = require('./routes/incidencias');
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', // URL de tu frontend
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+
 app.use(express.json());
+
+console.log(process.env.JWT_SECRET);
 
 // Conectar a MongoDB
 mongoose.connect('mongodb://localhost:27017/Fincas', {
-    //useNewUrlParser: true,
-    //useUnifiedTopology: true
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 });
 
 const db = mongoose.connection;
@@ -42,8 +51,9 @@ app.use('/api/propietarios', propietariosRouter);
 app.use('/api/bancos', bancosRouter);
 app.use('/api/cajas', cajaRoutes);
 app.use('/api/movimientos', movimientosRoutes);
-app.use('/api/comunidades', comunidadesRouter);
+app.use('/api/comunidades', comunidadesRoutes);
 app.use('/api/roles', rolRoutes);
+app.use('/api/incidencias', incidenciasRoutes);
 
 // Manejar rutas no definidas
 app.use((req, res) => {

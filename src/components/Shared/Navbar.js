@@ -16,6 +16,7 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <div className="navbar-left">
+                {/* Menú para empleados */}
                 {user?.tipo === 'empleado' && (
                     <>
                         <div className="menu">
@@ -53,6 +54,7 @@ const Navbar = () => {
                     </>
                 )}
 
+                {/* Menú para clientes */}
                 {user?.tipo === 'cliente' && (
                     <>
                         <div className="menu">
@@ -64,8 +66,11 @@ const Navbar = () => {
                         <div className="menu">
                             <span>Incidencias</span>
                             <div className="submenu">
-                                <Link to="/incidencias">Ver Incidencias</Link>
-                                <Link to="/incidencias/nueva">Nueva Incidencia</Link>
+                                {/* Enlace para ver la lista de incidencias */}
+                                <Link to={`/incidencias/${user._id}`}>Ver Incidencias</Link>
+
+                                {/* Enlace para abrir una nueva incidencia */}
+                                <Link to={`/incidencias/abrir/${user._id}`}>Nueva Incidencia</Link>
                             </div>
                         </div>
                     </>
