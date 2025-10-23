@@ -7,7 +7,6 @@ require('dotenv').config();
 const usuariosRoutes = require('./routes/usuarios');
 const gestionRoutes = require('./routes/gestion');
 const propiedadesRouter = require('./routes/propiedades');
-const administradorRouter = require('./routes/administradorFincas');
 const propietariosRouter = require('./routes/propietarios');
 const bancosRouter = require('./routes/bancos');
 const movimientosRoutes = require('./routes/movimientos');
@@ -15,6 +14,7 @@ const comunidadesRoutes = require('./routes/comunidades');
 const rolRoutes = require('./routes/rol');
 const cajaRoutes = require('./routes/caja');
 const incidenciasRoutes = require('./routes/incidencias');
+const empresasRoutes = require('./routes/empresas');
 
 const app = express();
 
@@ -45,13 +45,14 @@ db.once('open', () => {
 // Rutas de la API
 app.use('/api/usuarios', usuariosRoutes); // Login y perfil
 app.use('/api/gestions', gestionRoutes);
-app.use('/api/administradorfincas', administradorRouter);
 app.use('/api/propiedades', propiedadesRouter);
 app.use('/api/propietarios', propietariosRouter);
 app.use('/api/bancos', bancosRouter);
 app.use('/api/cajas', cajaRoutes);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/comunidades', comunidadesRoutes);
+app.use('/api/incidencias', incidenciasRoutes);
+app.use('/api/empresas', empresasRoutes);
 app.use('/api/roles', rolRoutes);
 app.use('/api/incidencias', incidenciasRoutes);
 

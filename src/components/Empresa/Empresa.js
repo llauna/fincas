@@ -1,92 +1,148 @@
+// components/Empresa/Empresa.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ComunidadesList from '../Comunidad/ComunidadesList';
+import PropietariosModal from '../Propietarios/PropietariosModal';
 
 const Empresa = () => {
     const navigate = useNavigate();
-    const [administradores, setAdministradores] = useState([]);
-    const [comunidades, setComunidades] = useState([]);
+    const [empresas, setEmpresas] = useState([]);
+    //const [comunidades, setComunidades] = useState([]);
+    const [propietarios, setPropietarios] = useState([]);
+    const [showPropietariosModal, setShowPropietariosModal] = useState(false);
+
+
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
-        idComunidades: [],
+        comunidades: [],
         nombre: '',
         telefono: '',
         email: '',
         cif: ''
     });
+    const [showModal, setShowModal] = useState(false);
+    const [formError, setFormError] = useState('');
+    const [editMode, setEditMode] = useState(false);
+    const [editId, setEditId] = useState(null);
 
-    // URLs del backend
-    const API_EMPRESAS = 'http://localhost:3001/api/administradorFincas';
+    const API_EMPRESAS = 'http://localhost:3001/api/empresas';
     const API_COMUNIDADES = 'http://localhost:3001/api/comunidades';
 
-    // Obtener empresas
-    const fetchAdministradores = async () => {
+    const fetchEmpresas = async () => {
         try {
-            const response = await axios.get(API_EMPRESAS);
-            setAdministradores(response.data);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(API_EMPRESAS, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setEmpresas(response.data);
         } catch (error) {
             console.error('Error fetching empresas:', error);
+            alert('Error al cargar empresas.');
         } finally {
             setLoading(false);
         }
     };
 
-    // Obtener comunidades
-    const fetchComunidades = async () => {
-        try {
-            const response = await axios.get(API_COMUNIDADES);
-            setComunidades(response.data);
-        } catch (error) {
-            console.error('Error fetching comunidades:', error);
-        }
-    };
-
     useEffect(() => {
-        fetchAdministradores();
-        fetchComunidades();
+        fetchEmpresas();
+        //fetchComunidades();
     }, []);
 
-    // Manejar cambios en inputs normales
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Manejar cambios en selección múltiple de comunidades
     const handleChangeComunidades = (e) => {
         const selectedOptions = Array.from(e.target.selectedOptions).map(opt => opt.value);
-        setFormData({ ...formData, idComunidades: selectedOptions });
+        setFormData({ ...formData, comunidades: selectedOptions });
     };
 
-    // Guardar empresa
-    const handleSubmit = async (e) => {
+    const handleCrearOEditar = async (e) => {
         e.preventDefault();
+        setFormError('');
+
+        if (!formData.nombre || !formData.telefono || !formData.email || !formData.cif) {
+            setFormError('Todos los campos son obligatorios.');
+            return;
+        }
+
         try {
-            await axios.post(API_EMPRESAS, formData);
+            const token = localStorage.getItem('token');
+
+            // Aseguramos que comunidades sea un array de IDs
+            const payload = {
+                ...formData,
+                comunidades: formData.comunidades.map(id => id.toString())
+            };
+            if (editMode) {
+                await axios.put(`${API_EMPRESAS}/${editId}`, payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            } else {
+                await axios.post(API_EMPRESAS, payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
+
             setFormData({
-                idComunidades: [],
+                comunidades: [],
                 nombre: '',
                 telefono: '',
                 email: '',
                 cif: ''
             });
-            fetchAdministradores();
+            setShowModal(false);
+            setEditMode(false);
+            setEditId(null);
+            fetchEmpresas();
         } catch (error) {
             console.error('Error saving empresa:', error.response?.data || error.message);
+            setFormError('Error al guardar la empresa.');
         }
     };
 
-    // Eliminar empresa
-    const handleDelete = async (id) => {
+    const handleEliminar = async (id) => {
         try {
-            await axios.delete(`${API_EMPRESAS}/${id}`);
-            fetchAdministradores();
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_EMPRESAS}/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchEmpresas();
         } catch (error) {
             console.error('Error deleting empresa:', error);
         }
     };
 
+    const handleEditar = (empresa) => {
+        console.log("ID que se va a editar:", empresa._id);
+        setFormData({
+            comunidades: empresa.comunidades?.map(c => c._id) || [],
+            nombre: empresa.nombre,
+            telefono: empresa.telefono,
+            email: empresa.email,
+            cif: empresa.cif
+        });
+        setEditMode(true);
+        setEditId(empresa._id);
+        setShowModal(true);
+    };
+
     const handleGoBack = () => {
         navigate(-1);
+    };
+
+    const handleVerPropietarios = async (comunidadId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_COMUNIDADES}/${comunidadId}/propietarios`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setPropietarios(response.data);
+            setShowPropietariosModal(true);
+        } catch (error) {
+            console.error('Error fetching propietarios:', error);
+        }
     };
 
     if (loading) {
@@ -95,61 +151,72 @@ const Empresa = () => {
 
     return (
         <div className="container mt-4">
-            <h1>Información Empresa</h1>
+            <h1 className="text-center">Gestión de Empresas</h1>
 
-            {/* Formulario */}
-            <div className="card my-4">
-                <div className="card-header bg-dark text-white">
-                    Alta Nueva Empresa
-                </div>
-                <div className="card-body">
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label className="form-label">Comunidades</label>
-                            <select
-                                className="form-control"
-                                name="idComunidades"
-                                value={formData.idComunidades}
-                                onChange={handleChangeComunidades}
-                                multiple
-                                required
-                            >
-                                {comunidades.map(com => (
-                                    <option key={com._id} value={com._id}>
-                                        {com.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                            <small className="text-muted">
-                                Mantén presionada CTRL (Windows) o CMD (Mac) para seleccionar varias.
-                            </small>
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Nombre</label>
-                            <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Teléfono</label>
-                            <input type="text" className="form-control" name="telefono" value={formData.telefono} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">Email</label>
-                            <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className="form-label">CIF</label>
-                            <input type="text" className="form-control" name="cif" value={formData.cif} onChange={handleChange} required />
-                        </div>
-                        <button type="submit" className="btn btn-success me-2">
-                            Guardar
-                        </button>
-                    </form>
-                </div>
+            <div className="text-center mb-4">
+                <button className="btn btn-primary" onClick={() => { setShowModal(true); setEditMode(false); }}>
+                    ➕ Registrar Nueva Empresa
+                </button>
             </div>
 
-            {/* Tabla */}
+            {showModal && <div className="custom-modal-backdrop"></div>}
+
+            {showModal && (
+                <div className="modal fade show custom-modal" style={{ display: 'block' }} tabIndex="-1">
+                    <div className="modal-dialog modal-lg">
+                        <div className="modal-content">
+                            <div className="modal-header bg-primary text-white">
+                                <h5 className="modal-title">{editMode ? 'Editar Empresa' : 'Registrar Nueva Empresa'}</h5>
+                                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                {formError && <div className="alert alert-danger">{formError}</div>}
+                                <form onSubmit={handleCrearOEditar} noValidate>
+                                    <div className="mb-3">
+                                        <label className="form-label">Comunidades</label>
+                                        <select
+                                            className="form-control"
+                                            name="comunidades"
+                                            value={formData.comunidades}
+                                            onChange={handleChangeComunidades}
+                                            multiple
+                                            required
+                                        >
+                                            {comunidades.map(com => (
+                                                <option key={com._id} value={com._id}>
+                                                    {com.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Nombre</label>
+                                        <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} required />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Teléfono</label>
+                                        <input type="text" className="form-control" name="telefono" value={formData.telefono} onChange={handleChange} required />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Email</label>
+                                        <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} required />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">CIF</label>
+                                        <input type="text" className="form-control" name="cif" value={formData.cif} onChange={handleChange} required />
+                                    </div>
+                                    <div className="d-flex justify-content-end">
+                                        <button type="submit" className="btn btn-primary">{editMode ? '💾 Guardar Cambios' : '💾 Guardar Empresa'}</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <h2 className="mt-5">Listado de Empresas</h2>
-            <table className="table table-bordered table-striped">
+            <table className="table table-striped">
                 <thead>
                 <tr>
                     <th>Comunidades</th>
@@ -161,32 +228,36 @@ const Empresa = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {administradores.map(admin => (
-                    <tr key={admin._id}>
-                        <td>{admin.comunidades?.map(c => c.nombre).join(', ') || 'Sin comunidades'}</td>
-                        <td>{admin.nombre}</td>
-                        <td>{admin.telefono}</td>
-                        <td>{admin.email}</td>
-                        <td>{admin.cif}</td>
+                {empresas.map(emp => (
+                    <tr key={emp._id}>
                         <td>
-                            <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleDelete(admin._id)}
-                            >
-                                Eliminar
-                            </button>
+                            <ComunidadesList
+                                comunidades={emp.comunidades}
+                                onVerPropietarios={handleVerPropietarios}
+                            />
+                        </td>
+                        <td>{emp.nombre}</td>
+                        <td>{emp.telefono}</td>
+                        <td>{emp.email}</td>
+                        <td>{emp.cif}</td>
+                        <td>
+                            {/* Botones de editar y eliminar */}
+                            <button className="btn btn-warning btn-sm me-2" onClick={() => handleEditar(emp)}>Editar</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleEliminar(emp._id)}>Eliminar</button>
                         </td>
                     </tr>
                 ))}
                 </tbody>
             </table>
 
-            <button
-                onClick={handleGoBack}
-                className="btn btn-secondary mt-3"
-            >
-                Volver
-            </button>
+            {showPropietariosModal && (
+                <PropietariosModal
+                    propietarios={propietarios}
+                    onClose={() => setShowPropietariosModal(false)}
+                />
+            )}
+
+            <button onClick={handleGoBack} className="btn btn-secondary mt-3">Volver</button>
         </div>
     );
 };

@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { verificarToken } = require('../middleware/auth'); // Middleware de autenticación
-
+const { getComunidades } = require('../controllers/propietarioController');
 const Comunidad = require('../models/Comunidad');
 
 // ✅ GET - Listar comunidades
@@ -49,5 +49,8 @@ router.delete('/:id', verificarToken, async (req, res) => {
         res.status(500).json({ message: 'Error al eliminar comunidad' });
     }
 });
+
+
+router.get('/api/comunidades', getComunidades);
 
 module.exports = router;
