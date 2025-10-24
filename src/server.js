@@ -20,7 +20,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:3000', // URL de tu frontend
+    origin: 'http://localhost:3000', // URL de tu frontend React
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -63,5 +63,5 @@ app.use((req, res) => {
 
 // Iniciar el servidor
 app.listen(3001, () => {
-    console.log('🚀 Servidor corriendo en http://localhost:3001');
+    console.log('🚀 Servidor corriendo en puerto 3001');
 });

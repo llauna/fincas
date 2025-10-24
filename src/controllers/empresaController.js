@@ -1,5 +1,5 @@
 // controllers/empresaController.js
-const Empresa = require('../models/AdministradorFincas');
+const Empresa = require('../models/Empresa');
 
 exports.getEmpresas = async (req, res) => {
     try {
