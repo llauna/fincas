@@ -149,10 +149,10 @@ const Propiedades = ({ propietarioId }) => {
                                                 onChange={handleChange}
                                                 required
                                             >
-                                                <option value="">Seleccione...</option>
+                                                <option value="">Seleccione un propietario</option>
                                                 {propietariosDisponibles.map((prop) => (
                                                     <option key={prop._id} value={prop._id}>
-                                                        {prop.nombre}
+                                                        {prop.nombre} {prop.apellidos || ''}
                                                     </option>
                                                 ))}
                                             </select>
@@ -167,12 +167,98 @@ const Propiedades = ({ propietarioId }) => {
                                                 value={formData.direccion}
                                                 onChange={handleChange}
                                                 required
+                                                placeholder="Calle/Avenida/Plaza..."
                                             />
                                         </div>
                                     </div>
-                                    {/* Más campos del formulario */}
-                                    <div className="d-flex justify-content-end">
-                                        <button type="submit" className="btn btn-primary">💾 Guardar Propiedad</button>
+
+                                    <div className="row">
+                                        <div className="col-md-4 mb-3">
+                                            <label htmlFor="numero" className="form-label">Número</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="numero"
+                                                name="numero"
+                                                value={formData.numero}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="Número"
+                                            />
+                                        </div>
+                                        <div className="col-md-4 mb-3">
+                                            <label htmlFor="poblacion" className="form-label">Población</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="poblacion"
+                                                name="poblacion"
+                                                value={formData.poblacion}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="Ciudad/Pueblo"
+                                            />
+                                        </div>
+                                        <div className="col-md-4 mb-3">
+                                            <label htmlFor="cp" className="form-label">Código Postal</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="cp"
+                                                name="cp"
+                                                value={formData.cp}
+                                                onChange={handleChange}
+                                                required
+                                                pattern="[0-9]{5}"
+                                                title="El código postal debe tener 5 dígitos"
+                                                placeholder="12345"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="row">
+                                        <div className="col-md-6 mb-3">
+                                            <label htmlFor="planta" className="form-label">Planta</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="planta"
+                                                name="planta"
+                                                value={formData.planta}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="Ej: 1ºA, Bajo, Ático..."
+                                            />
+                                        </div>
+                                        <div className="col-md-6 mb-3">
+                                            <label htmlFor="coeficiente" className="form-label">Coeficiente</label>
+                                            <div className="input-group">
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    max="1"
+                                                    className="form-control"
+                                                    id="coeficiente"
+                                                    name="coeficiente"
+                                                    value={formData.coeficiente}
+                                                    onChange={handleChange}
+                                                    required
+                                                    placeholder="0.00"
+                                                />
+                                                <span className="input-group-text">%</span>
+                                            </div>
+                                            <div className="form-text">Valor entre 0 y 1 (ej: 0.25 para 25%)</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="d-flex justify-content-between mt-4">
+                                        <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" className="btn btn-primary">
+                                            💾 Guardar Propiedad
+                                        </button>
                                     </div>
                                 </form>
                             </div>

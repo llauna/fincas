@@ -11,35 +11,36 @@ export default function Configuracion({ token }) {
     const [tabActiva, setTabActiva] = useState('roles');
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);
+    const [usuariosCargados, setUsuariosCargados] = useState(false);
+    const [rolesCargados, setRolesCargados] = useState(false);
 
     const API_USUARIOS_URL = 'http://localhost:3001/api/usuarios';
     const API_ROLES_URL = 'http://localhost:3001/api/roles';
 
-    if (rolUsuario !== 'Administrador') {
-        return (
-            <div className="container mt-4">
-                <h2>Acceso denegado</h2>
-                <p>Solo los usuarios con rol Administrador pueden acceder a esta sección.</p>
-            </div>
-        );
-    }
-
-    // ✅ useEffect siempre se llama, pero ejecuta solo si la pestaña es "usuarios"
+    // ✅ useEffect siempre se llama, pero solo carga datos si es necesario
     useEffect(() => {
-        if (tabActiva === 'usuarios') {
+        if (tabActiva === 'usuarios' && !usuariosCargados) {
             axios.get(API_USUARIOS_URL, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-                .then(res => setUsuarios(res.data))
+                .then(res => {
+                    setUsuarios(res.data);
+                    setUsuariosCargados(true);
+                })
                 .catch(err => console.error("❌ Error cargando usuarios:", err));
+        }
 
+        if ((tabActiva === 'usuarios' || tabActiva === 'permisos') && !rolesCargados) {
             axios.get(API_ROLES_URL, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-                .then(res => setRoles(res.data))
+                .then(res => {
+                    setRoles(res.data);
+                    setRolesCargados(true);
+                })
                 .catch(err => console.error("❌ Error cargando roles:", err));
         }
-    }, [tabActiva, token]);
+    }, [tabActiva, token, usuariosCargados, rolesCargados]);
 
     // Cambiar rol de usuario
     const cambiarRol = (idUsuario, nuevoRol) => {
@@ -59,6 +60,16 @@ export default function Configuracion({ token }) {
     const handleGoBack = () => {
         navigate(-1);
     };
+
+    // ✅ El return condicional va después de los hooks
+    if (rolUsuario !== 'Administrador') {
+        return (
+            <div className="container mt-4">
+                <h2>Acceso denegado</h2>
+                <p>Solo los usuarios con rol Administrador pueden acceder a esta sección.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="container mt-4">
@@ -200,15 +211,13 @@ export default function Configuracion({ token }) {
                         </table>
                     </div>
                 )}
-
             </div>
 
             {/* Botón volver */}
             <div className="text-center mt-4">
-                <br/>
+                <br />
                 <button onClick={handleGoBack} className="btn btn-secondary">Volver</button>
             </div>
-
         </div>
     );
 }
