@@ -342,25 +342,51 @@ const Proveedores = () => {
             <table className="table table-striped">
                 <thead>
                 <tr>
-                    <th>Nombre</th>
+                    <th style={{ whiteSpace: 'nowrap'}}>Nombre</th>
                     <th>Actividad</th>
                     <th>Teléfono</th>
                     <th>Email</th>
-                    <th>Tipo Servicio</th>
-                    <th>Acciones</th>
+                    <th style={{ whiteSpace: 'nowrap'}}>Tipo Servicio</th>
+                    <th style={{ width: '450px'}} className="text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
                 {proveedores.map(prov => (
                     <tr key={prov._id}>
-                        <td>{prov.nombre}</td>
+                        <td style={{ whiteSpace: 'nowrap'}}>{prov.nombre}</td>
                         <td>{prov.actividad}</td>
                         <td>{prov.telefono}</td>
                         <td>{prov.email}</td>
-                        <td>{prov.tipoServicio}</td>
-                        <td>
-                            <button className="btn btn-info btn-sm" onClick={() => setProveedorSeleccionado(prov)}>Ver Detalles</button>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleEliminar(prov._id)}>Eliminar</button>
+                        <td style={{ whiteSpace: 'nowrap'}}>{prov.tipoServicio}</td>
+                        <td style={{ width: '450px', whiteSpace: 'nowrap'}} className="text-end" >
+                            <div className="d-flex gap-1 justify-content-end">
+                                <button
+                                    className="btn btn-info btn-sm d-flex align-items-center"
+                                    onClick={() => setProveedorSeleccionado(prov)}
+                                    title="Ver detalles"
+                                >
+                                    <i className="fas fa-eye me-1"></i>
+                                    <span className="d-none d-md-inline">Ver</span>
+                                </button>
+                                <button className="btn btn-warning btn-sm" onClick={() => navigate(`/proveedores/${prov._id}/`)}>Facturas</button>
+                                <button className="btn btn-success btn-sm" onClick={() => navigate(`/proveedores/${prov._id}/trabajos`)}>Trabajos</button>
+                                <button
+                                    className="btn btn-warning btn-sm d-flex align-items-center"
+                                    onClick={() => {/* Add edit functionality here */}}
+                                    title="Editar"
+                                >
+                                    <i className="fas fa-edit me-1"></i>
+                                    <span className="d-none d-md-inline">Editar</span>
+                                </button>
+                                <button
+                                    className="btn btn-danger btn-sm d-flex align-items-center"
+                                    onClick={() => handleEliminar(prov._id)}
+                                    title="Eliminar"
+                                >
+                                    <i className="fas fa-trash-alt me-1"></i>
+                                    <span className="d-none d-md-inline">Eliminar</span>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 ))}
