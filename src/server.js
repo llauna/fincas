@@ -15,6 +15,7 @@ const rolRoutes = require('./routes/rol');
 const cajaRoutes = require('./routes/caja');
 const incidenciasRoutes = require('./routes/incidencias');
 const empresasRoutes = require('./routes/empresas');
+const proveedoresRoutes = require('./routes/proveedores');
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/incidencias', incidenciasRoutes);
 app.use('/api/empresas', empresasRoutes);
 app.use('/api/roles', rolRoutes);
 app.use('/api/incidencias', incidenciasRoutes);
+app.use('/api/proveedores', proveedoresRoutes);
 
 // Manejar rutas no definidas
 app.use((req, res) => {
