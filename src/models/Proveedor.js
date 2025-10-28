@@ -16,6 +16,12 @@ const trabajoSchema = new mongoose.Schema({
 });
 
 const proveedorSchema = new mongoose.Schema({
+    nif: { 
+        type: String, 
+        unique: true, 
+        sparse: true,  // Allows multiple documents with null/undefined nif
+        trim: true
+    },
     nombre: { type: String, required: true },
     direccion: { type: String, required: true },
     poblacion: { type: String, required: true },

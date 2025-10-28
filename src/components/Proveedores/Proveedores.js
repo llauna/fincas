@@ -65,9 +65,32 @@ const Proveedores = () => {
         }
 
         try {
-            console.log('Enviando datos del proveedor:', formData);
-            const response = await axios.post(API_PROVEEDORES_URL, formData);
-            console.log('Respuesta del servidor:', response.data);
+            console.log('=== INICIO DE SOLICITUD ===');
+            console.log('Datos del formulario:', JSON.stringify(formData, null, 2));
+            
+            // Limpiar el NIF si está vacío
+            const dataToSend = { ...formData };
+            if (dataToSend.nif && dataToSend.nif.trim() === '') {
+                console.log('Eliminando campo NIF vacío');
+                delete dataToSend.nif;
+            }
+            
+            console.log('Datos a enviar:', JSON.stringify(dataToSend, null, 2));
+            console.log('URL de la API:', API_PROVEEDORES_URL);
+            
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            };
+            
+            console.log('Configuración de la petición:', config);
+            
+            const response = await axios.post(API_PROVEEDORES_URL, dataToSend, config);
+            console.log('=== RESPUESTA DEL SERVIDOR ===');
+            console.log('Estado:', response.status, response.statusText);
+            console.log('Datos de respuesta:', response.data);
             
             // Actualizar la lista de proveedores
             const res = await axios.get(API_PROVEEDORES_URL);
@@ -76,6 +99,7 @@ const Proveedores = () => {
             // Mostrar mensaje de éxito y limpiar el formulario
             setSuccessMessage('✅ Proveedor registrado correctamente');
             setFormData({
+                nif: '',
                 nombre: '',
                 direccion: '',
                 poblacion: '',
@@ -92,35 +116,56 @@ const Proveedores = () => {
             setTimeout(() => {
                 setSuccessMessage('');
                 setShowModal(false);
-            }, 2000);
+            }, 3000);
 
         } catch (error) {
             console.error('Error al guardar proveedor:', error);
-            let errorMessage = 'Error al guardar el proveedor';
             
             if (error.response) {
-                // El servidor respondió con un código de estado fuera del rango 2xx
-                console.error('Datos del error:', error.response.data);
-                errorMessage = error.response.data.message || error.response.data.error || errorMessage;
+                console.error('Datos completos de la respuesta de error:', error.response);
                 
-                // Manejar errores de validación específicos
-                if (error.response.data.errors) {
-                    const validationErrors = Object.values(error.response.data.errors)
-                        .map(err => err.message || err.msg)
-                        .join('. ');
-                    if (validationErrors) errorMessage = validationErrors;
+                // Mostrar el error completo en la consola para depuración
+                if (error.response.data) {
+                    console.error('Datos del error:', error.response.data);
+                    
+                    // Si hay un error de validación de Mongoose
+                    if (error.response.data.error) {
+                        console.error('Error de Mongoose:', error.response.data.error);
+                        
+                        // Si es un error de duplicado
+                        if (error.response.data.error.code === 11000) {
+                            // Verificar si es el NIF duplicado
+                            if (error.response.data.error.keyPattern && error.response.data.error.keyPattern.nif) {
+                                setFormError('Ya existe un proveedor con este NIF');
+                            } else {
+                                setFormError('Error: Ya existe un proveedor con los mismos datos');
+                            }
+                        } 
+                        // Si es un error de validación
+                        else if (error.response.data.error.name === 'ValidationError') {
+                            const validationErrors = [];
+                            for (const field in error.response.data.error.errors) {
+                                validationErrors.push(error.response.data.error.errors[field].message);
+                            }
+                            setFormError(`Error de validación: ${validationErrors.join('. ')}`);
+                        }
+                        // Otros errores
+                        else {
+                            setFormError(error.response.data.error.message || 'Error al guardar el proveedor');
+                        }
+                    }
+                    // Si hay un mensaje de error directo
+                    else if (error.response.data.message) {
+                        setFormError(error.response.data.message);
+                    }
                 }
             } else if (error.request) {
-                // La solicitud fue hecha pero no se recibió respuesta
                 console.error('No se recibió respuesta del servidor');
-                errorMessage = 'No se pudo conectar con el servidor. Por favor, intente nuevamente.';
+                setFormError('No se pudo conectar con el servidor. Por favor, intente nuevamente.');
             } else {
-                // Error al configurar la solicitud
                 console.error('Error al configurar la solicitud:', error.message);
-                errorMessage = `Error: ${error.message}`;
+                setFormError(`Error: ${error.message}`);
             }
-            
-            setFormError(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -254,6 +299,19 @@ const Proveedores = () => {
 
                                         <div className="row">
                                             <div className="col-md-6 mb-3">
+                                                <label className="form-label">NIF</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="form-control" 
+                                                    name="nif" 
+                                                    value={formData.nif || ''} 
+                                                    onChange={handleChange} 
+                                                    placeholder="Opcional"
+                                                    disabled={isSubmitting}
+                                                />
+                                                <small className="text-muted">Dejar en blanco si no tiene NIF</small>
+                                            </div>
+                                            <div className="col-md-6 mb-3">
                                                 <label className="form-label">Dirección <span className="text-danger">*</span></label>
                                                 <input 
                                                     type="text" 
@@ -358,7 +416,7 @@ const Proveedores = () => {
                         <td>{prov.telefono}</td>
                         <td>{prov.email}</td>
                         <td style={{ whiteSpace: 'nowrap'}}>{prov.tipoServicio}</td>
-                        <td style={{ width: '450px', whiteSpace: 'nowrap'}} className="text-end" >
+                        <td style={{ width: '500px', whiteSpace: 'nowrap'}} className="text-end" >
                             <div className="d-flex gap-1 justify-content-end">
                                 <button
                                     className="btn btn-info btn-sm d-flex align-items-center"
