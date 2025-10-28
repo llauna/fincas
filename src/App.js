@@ -9,6 +9,7 @@ import Propietarios from "./components/Propietarios/Propietarios";
 import Comunidades from "./components/Comunidad/Comunidades";
 import Proveedores from "./components/Proveedores/Proveedores";
 import ProveedorFacturas from './components/Proveedores/ProveedorFacturas';
+import ProveedorTrabajos from './components/Proveedores/ProveedorTrabajos';
 import Empleados from "./components/Usuario/Usuario";
 import Roles from "./components/Roles/Roles";
 import Configuracion from './components/Usuario/Configuracion';
@@ -49,6 +50,7 @@ export default function App()  {
                     <Route path="/empresa" element={<Empresa />} />
                     <Route path="/proveedores" element={<Proveedores />} />
                     <Route path="/proveedores/:id" element={<ProveedorFacturas />} />
+                    <Route path="/proveedores/:id/trabajos" element={<ProveedorTrabajos />} />
                     <Route path="/administradorFincas" element={<AdministradorFincas />} />
                     <Route path="/propiedades" element={<Propiedades />} />
                     <Route path="/propietarios" element={<Propietarios />} />

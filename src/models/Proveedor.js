@@ -9,10 +9,24 @@ const facturaSchema = new mongoose.Schema({
 });
 
 const trabajoSchema = new mongoose.Schema({
-    descripcion: String,
+    descripcion: { type: String, required: true },
+    fechaSolicitud: { type: Date, default: Date.now },
     fechaInicio: Date,
     fechaFin: Date,
-    estado: { type: String, enum: ['pendiente', 'en progreso', 'finalizado'], default: 'pendiente' }
+    estado: { 
+        type: String, 
+        enum: ['Pendiente', 'En progreso', 'Completado', 'Facturado'], 
+        default: 'Pendiente' 
+    },
+    facturaAsociada: {
+        type: String,
+        default: 'pendiente'
+    },
+    comunidad: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comunidad',
+        required: true
+    }
 });
 
 const proveedorSchema = new mongoose.Schema({
