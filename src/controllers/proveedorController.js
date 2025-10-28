@@ -11,6 +11,19 @@ exports.getProveedores = async (req, res) => {
     }
 };
 
+// Controlador para obtener un proveedor por su ID
+exports.getProveedorById = async (req, res) => {
+    try {
+        const proveedor = await Proveedor.findById(req.params.id);
+        if (!proveedor) {
+            return res.status(404).json({ message: 'Proveedor no encontrado' });
+        }
+        res.json(proveedor);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener el proveedor', error });
+    }
+};
+
 // Crear proveedor
 exports.createProveedor = async (req, res) => {
     try {

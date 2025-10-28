@@ -48,7 +48,7 @@ export default function App()  {
                     <Route path="/usuario" element={<Empleados />} />
                     <Route path="/empresa" element={<Empresa />} />
                     <Route path="/proveedores" element={<Proveedores />} />
-                    <Route path="/proveedores/:id/facturas" element={<ProveedorFacturas />} />
+                    <Route path="/proveedores/:id" element={<ProveedorFacturas />} />
                     <Route path="/administradorFincas" element={<AdministradorFincas />} />
                     <Route path="/propiedades" element={<Propiedades />} />
                     <Route path="/propietarios" element={<Propietarios />} />

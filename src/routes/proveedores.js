@@ -6,6 +6,9 @@ const proveedorController = require('../controllers/proveedorController');
 router.get('/', proveedorController.getProveedores);
 router.post('/', proveedorController.createProveedor);
 router.delete('/:id', proveedorController.deleteProveedor);
+// Ruta para obtener un proveedor por su ID
+router.get('/:id', proveedorController.getProveedorById);
+
 
 // Facturas
 router.post('/:id/facturas', proveedorController.addFactura);
