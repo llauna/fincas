@@ -1,0 +1,205 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+' =========================
+' Entidades según tu menú actual
+' =========================
+
+class Banco {
+  + nombre: string
+  + direccion: string
+  + poblacion: string
+  + cp: string
+  + cuentaBancaria: string
+  + fecha: Date
+  + descripcion: string
+  + cobros: number
+  + pagos: number
+  + saldo: number
+
+}
+
+class Caja {
+  + comunidadId: ObjectId <<ref: Comunidad>>
+  + fecha: Date
+  + concepto: String
+  + importe: Number
+  + tipo: String <<enum: Ingreso | Gasto>>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class Comunidad {
+  + nombre: String
+  + direccion: String
+  + poblacion: String
+  + cp: String
+  + provincia: String
+  + propietarios: List<ObjectId> <<ref: Propietario>>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class Contrato {
+  + idProveedor: ObjectId <<ref: Proveedor>>
+  + idAdministradorFincas: ObjectId <<ref: AdministradorFincas>>
+  + tipoServicio: String
+  + fechaInicio: Date
+  + fechaFin: Date
+  + coste: Number
+}
+
+class Empleado {
+  + idAdministradorFincas: ObjectId <<ref: AdministradorFincas>>
+  + nombre: String
+  + apellidos: String
+  + direccion: String
+  + poblacion: String
+  + cp: String
+  + dni: String <<unique>>
+  + cta_cte: String
+  + fechaInicio: Date
+  + fechaBaja: Date
+}
+
+class Empresa {
+  + nombre: String
+  + telefono: String
+  + email: String
+  + cif: String
+  + comunidades: List<ObjectId> <<ref: Comunidad>>
+  + propietarios: List<ObjectId> <<ref: Propietario>>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class Incidencia {
+  + idIncidencia: String <<UUID, unique>>
+  + fechaHoraReporte: Date <<default: now>>
+  + reportadoPor_nombre: String
+  + reportadoPor_contacto: String
+  + ubicacionEspecifica: String
+  + descripcionDetallada: String
+  + gravedadImpacto: String <<enum: Baja | Media | Alta | Crítica>>
+  + proveedorId: ObjectId <<ref: Proveedor>>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class LocalComercial {
+  + direccion: String
+  + superficie: Number
+  + propietarioId: ObjectId <<ref: Propietario>>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class Movimiento {
+  + fecha: Date
+  + descripcion: String
+  + importe: Number
+  + tipo: String <<enum: Ingreso | Gasto>>
+  + banco: ObjectId <<ref: Banco>>
+}
+
+class Propiedad {
+  + idPropietario: ObjectId <<ref: Propietario>>
+  + direccion: String
+  + numero: String
+  + poblacion: String
+  + cp: String
+  + planta: String
+  + coeficiente: Number
+}
+
+class Propietario {
+  + nombre: String
+  + telefono: String
+  + email: String
+  + gestorFinca: ObjectId <<ref: Empresa>>
+  + comunidades: List<ObjectId> <<ref: Comunidad>>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class Factura {
+  + numero: String
+  + fecha: Date
+  + importe: Number
+  + concepto: String
+  + archivo: String
+}
+
+class Trabajo {
+  + descripcion: String
+  + fechaSolicitud: Date <<default: now>>
+  + fechaInicio: Date
+  + fechaFin: Date
+  + estado: String <<enum: Pendiente | En progreso | Completado | Facturado>>
+  + facturaAsociada: String <<default: pendiente>>
+  + comunidad: ObjectId <<ref: Comunidad>>
+}
+
+class Proveedor {
+  + nif: String <<unique, sparse>>
+  + nombre: String
+  + direccion: String
+  + poblacion: String
+  + cp: String
+  + tipoServicio: String
+  + actividad: String
+  + telefono: String
+  + email: String
+  + facturas: List<Factura>
+  + trabajos: List<Trabajo>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class Rol {
+  + nombre: String <<enum: Administrador | Propietario | Usuario_1 | Usuario_2 | Cliente | Empleado>>
+}
+
+class Usuario {
+  + nombre: String
+  + email: String <<unique>>
+  + password: String
+  + tipo: String <<enum: empleado | cliente>> <<default: cliente>>
+  + rol: ObjectId <<ref: Rol>>
+  + createdAt: Date
+  + updatedAt: Date
+}
+
+class Vivienda {
+  + idPropiedad: ObjectId <<ref: Propiedad>>
+  + numHabitaciones: Number
+  + superficie: Number
+}
+
+' =========================
+' Relaciones
+' =========================
+Banco "1" -- "*" Caja : gestiona
+Caja "1" -- "*" Movimiento : registra
+Caja "1" --> "1" Comunidad : pertenece a
+Comunidad "1" -- "*" Propiedad : tiene
+Propiedad "1" -- "1" Propietario : pertenece a
+Propietario "1" -- "*" Contrato : firma
+Contrato "1" -- "1" Propiedad : sobre
+Contrato "1" --> "1" Proveedor : contratado a
+Contrato "1" --> "1" AdministradorFincas : gestionado por
+Empresa "1" --> "*" Comunidad : gestiona
+Empresa "1" --> "*" Propietario : relación con
+Empleado "1" --> "1" AdministradorFincas : pertenece a
+Incidencia "1" -- "1" Proveedor : atendida por
+LocalComercial "1" --> "1" Propietario : pertenece a
+Movimiento "1" --> "1" Banco : pertenece a
+Propietario "1" --> "1" Empresa : gestionado por
+Propietario "1" --> "*" Comunidad : pertenece a
+Proveedor "1" --> "*" Factura : emite
+Proveedor "1" --> "*" Trabajo : realiza
+Trabajo "1" --> "1" Comunidad : para
+Usuario "1" -- "1" Rol : tiene
+Vivienda "1" --> "1" Propiedad : pertenece a
+@enduml
