@@ -15,32 +15,63 @@ export default function AbrirIncidencia() {
         gravedadImpacto: ''
     });
     const [formError, setFormError] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Obtener el propietario automáticamente al cargar el componente
-        const fetchPropietario = async () => {
+        const initializeForm = async () => {
             try {
-                const res = await fetch(`/api/propietarios/${propietarioId}`);
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    setFormError(errorData.message || 'Error al obtener el propietario.');
+                // Obtener el usuario logueado desde localStorage
+                const storedUser = localStorage.getItem('user');
+                if (!storedUser) {
+                    setFormError('No se encontró la información del usuario. Por favor, inicie sesión nuevamente.');
+                    setIsLoading(false);
                     return;
                 }
-                const propietarioData = await res.json();
-                setFormData((prev) => ({
-                    ...prev,
-                    reportadoPor: {
-                        nombre: propietarioData.nombre,
-                        contacto: propietarioData.email // Usa el email como contacto predeterminado
+
+                const currentUser = JSON.parse(storedUser);
+                console.log('Usuario actual:', currentUser);
+
+                if (currentUser.tipo === 'cliente') {
+                    // Si es un cliente, usar sus propios datos
+                    setFormData(prev => ({
+                        ...prev,
+                        reportadoPor: {
+                            nombre: currentUser.nombre || 'Nombre no disponible',
+                            contacto: currentUser.email || currentUser.telefono || 'Contacto no disponible'
+                        }
+                    }));
+                } else if (propietarioId) {
+                    // Si es un empleado, obtener los datos del propietario seleccionado
+                    const res = await fetch(`/api/propietarios/${propietarioId}`);
+                    if (!res.ok) {
+                        const errorData = await res.json().catch(() => ({}));
+                        throw new Error(errorData.message || 'Error al obtener el propietario');
                     }
-                }));
+                    
+                    const propietarioData = await res.json();
+                    console.log('Datos del propietario:', propietarioData);
+                    
+                    if (!propietarioData) {
+                        throw new Error('No se recibieron datos del propietario');
+                    }
+                    
+                    setFormData(prev => ({
+                        ...prev,
+                        reportadoPor: {
+                            nombre: propietarioData.nombre || 'Nombre no disponible',
+                            contacto: propietarioData.email || propietarioData.telefono || 'Contacto no disponible'
+                        }
+                    }));
+                }
             } catch (error) {
-                console.error('Error al obtener propietario:', error);
-                setFormError('Error al obtener el propietario.');
+                console.error('Error al inicializar el formulario:', error);
+                setFormError(error.message || 'Error al cargar los datos del formulario');
+            } finally {
+                setIsLoading(false);
             }
         };
 
-        fetchPropietario();
+        initializeForm();
     }, [propietarioId]);
 
     const handleChange = (e) => {
@@ -62,37 +93,68 @@ export default function AbrirIncidencia() {
         setFormError('');
 
         try {
-            const res = await fetch('/api/incidencias', {
+            // Asegurarse de que los campos requeridos estén presentes
+            if (!formData.reportadoPor?.nombre || !formData.reportadoPor?.contacto) {
+                throw new Error('Por favor complete todos los campos requeridos');
+            }
+
+            // Crear el objeto de incidencia con la estructura exacta esperada por el servidor
+            const incidenciaData = {
+                reportadoPor: {
+                    nombre: formData.reportadoPor.nombre,
+                    contacto: formData.reportadoPor.contacto
+                },
+                ubicacionEspecifica: formData.ubicacionEspecifica,
+                descripcionDetallada: formData.descripcionDetallada,
+                gravedadImpacto: formData.gravedadImpacto
+                // idIncidencia y fechaHoraReporte se generan automáticamente en el servidor
+            };
+
+            console.log('Enviando datos de incidencia:', JSON.stringify(incidenciaData, null, 2));
+
+            const res = await fetch('http://localhost:3001/api/incidencias', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(incidenciaData),
+                credentials: 'include' // Importante para las cookies de autenticación
             });
 
-            if (res.ok) {
-                alert('Incidencia creada exitosamente');
-                setFormData({
-                    idIncidencia: '',
-                    reportadoPor: {
-                        nombre: '',
-                        contacto: ''
-                    },
-                    ubicacionEspecifica: '',
-                    descripcionDetallada: '',
-                    gravedadImpacto: ''
-                });
-            } else {
+            if (!res.ok) {
                 const errorData = await res.json();
-                setFormError(errorData.message || 'Error al crear la incidencia.');
+                throw new Error(errorData.message || 'Error al crear la incidencia');
             }
+
+            const result = await res.json();
+            console.log('Incidencia creada:', result);
+            
+            alert('Incidencia creada exitosamente');
+            
+            // Redirigir al usuario después de crear la incidencia
+            navigate('/dashboard');
+            
         } catch (error) {
             console.error('Error al crear incidencia:', error);
-            setFormError('Error al crear la incidencia.');
+            setFormError(error.message || 'Error al crear la incidencia. Por favor, intente de nuevo.');
         }
     };
 
     const handleGoBack = () => {
         navigate(-1);
     };
+
+    if (isLoading) {
+        return (
+            <div className="container mt-5 text-center">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                </div>
+                <p className="mt-2">Cargando datos del formulario...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="container mt-5">

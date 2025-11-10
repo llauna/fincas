@@ -5,8 +5,9 @@ import Roles from './../Roles/Roles';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-export default function Configuracion({ token }) {
+export default function Configuracion() {
     const navigate = useNavigate();
+    const token = localStorage.getItem('token'); // 🔹 Leer token directamente
     const rolUsuario = JSON.parse(localStorage.getItem('user'))?.rol || '';
     const [tabActiva, setTabActiva] = useState('roles');
     const [usuarios, setUsuarios] = useState([]);
@@ -17,33 +18,53 @@ export default function Configuracion({ token }) {
     const API_USUARIOS_URL = 'http://localhost:3001/api/usuarios';
     const API_ROLES_URL = 'http://localhost:3001/api/roles';
 
-    // ✅ useEffect siempre se llama, pero solo carga datos si es necesario
     useEffect(() => {
+        console.log("🔍 Token recibido en Configuracion:", token);
+        console.log("🔍 URL usuarios:", API_USUARIOS_URL);
+        console.log("🔍 URL roles:", API_ROLES_URL);
+        console.log("🔍 Pestaña activa:", tabActiva);
+
+        if (!token) {
+            console.error("❌ No se encontró token en localStorage. No se harán peticiones.");
+            return;
+        }
+
         if (tabActiva === 'usuarios' && !usuariosCargados) {
+            console.log("📡 Solicitando lista de usuarios...");
             axios.get(API_USUARIOS_URL, {
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(res => {
+                    console.log("✅ Usuarios recibidos:", res.data);
                     setUsuarios(res.data);
                     setUsuariosCargados(true);
                 })
-                .catch(err => console.error("❌ Error cargando usuarios:", err));
+                .catch(err => {
+                    console.error("❌ Error cargando usuarios:", err.response?.status, err.response?.data);
+                });
         }
 
         if ((tabActiva === 'usuarios' || tabActiva === 'permisos') && !rolesCargados) {
+            console.log("📡 Solicitando lista de roles...");
             axios.get(API_ROLES_URL, {
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(res => {
+                    console.log("✅ Roles recibidos:", res.data);
                     setRoles(res.data);
                     setRolesCargados(true);
                 })
-                .catch(err => console.error("❌ Error cargando roles:", err));
+                .catch(err => {
+                    console.error("❌ Error cargando roles:", err.response?.status, err.response?.data);
+                });
         }
     }, [tabActiva, token, usuariosCargados, rolesCargados]);
 
-    // Cambiar rol de usuario
     const cambiarRol = (idUsuario, nuevoRol) => {
+        if (!token) {
+            alert("❌ No hay token, no se puede cambiar el rol.");
+            return;
+        }
         axios.put(`${API_USUARIOS_URL}/${idUsuario}/rol`, { rol: nuevoRol }, {
             headers: { Authorization: `Bearer ${token}` }
         })
@@ -52,7 +73,7 @@ export default function Configuracion({ token }) {
                 setUsuarios(usuarios.map(u => u._id === idUsuario ? { ...u, rol: roles.find(r => r._id === nuevoRol) } : u));
             })
             .catch(err => {
-                console.error("❌ Error cambiando rol:", err);
+                console.error("❌ Error cambiando rol:", err.response?.status, err.response?.data);
                 alert('Error al cambiar rol');
             });
     };
@@ -61,7 +82,6 @@ export default function Configuracion({ token }) {
         navigate(-1);
     };
 
-    // ✅ El return condicional va después de los hooks
     if (rolUsuario !== 'Administrador') {
         return (
             <div className="container mt-4">
@@ -197,7 +217,7 @@ export default function Configuracion({ token }) {
                                                 })
                                                     .then(() => alert('✅ Permisos actualizados'))
                                                     .catch(err => {
-                                                        console.error("❌ Error actualizando permisos:", err);
+                                                        console.error("❌ Error actualizando permisos:", err.response?.status, err.response?.data);
                                                         alert('Error al actualizar permisos');
                                                     });
                                             }}
