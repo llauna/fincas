@@ -1,11 +1,11 @@
 // routes/rol.js
 const express = require('express');
 const router = express.Router();
-const Rol = require('../models/Rol'); // Ajusta la ruta a tu modelo real
-const authMiddleware = require('../middleware/auth'); // Si tienes middleware de autenticación
+const Rol = require('../models/Rol');
+const { verificarToken } = require('../middleware/auth');
 
 // 📌 Obtener todos los roles
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', verificarToken, async (req, res) => {
     try {
         const roles = await Rol.find();
         res.json(roles);
@@ -16,7 +16,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // 📌 Crear un nuevo rol
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', verificarToken, async (req, res) => {
     try {
         const { nombre, permisos } = req.body;
         const nuevoRol = new Rol({ nombre, permisos });
@@ -29,7 +29,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // 📌 Actualizar permisos de un rol
-router.put('/:id/permisos', authMiddleware, async (req, res) => {
+router.put('/:id/permisos', verificarToken, async (req, res) => {
     try {
         const { permisos } = req.body;
 
@@ -55,7 +55,7 @@ router.put('/:id/permisos', authMiddleware, async (req, res) => {
 });
 
 // 📌 Eliminar un rol
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', verificarToken, async (req, res) => {
     try {
         const rol = await Rol.findByIdAndDelete(req.params.id);
         if (!rol) {
