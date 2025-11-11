@@ -9,35 +9,77 @@ export default function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        
+        if (!email || !password) {
+            alert('Por favor, ingresa tu correo y contraseña');
+            return;
+        }
+        
         try {
-            const res = await fetch('http://localhost:3001/api/usuarios/login', {
+            // Mostrar la contraseña en texto plano (solo para depuración)
+            console.log('Enviando contraseña en texto plano');
+            
+            console.log('Iniciando sesión con:', { email });
+            
+            console.log('Enviando solicitud de login...');
+            const response = await fetch('http://localhost:3001/api/usuarios/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                headers: { 
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    password: password, // Enviamos la contraseña en texto plano
+                    isPreHashed: false // Indicamos que la contraseña NO está hasheada
+                }),
+                credentials: 'include'
             });
-
-            let data;
-            try {
-                data = await res.json();
-            } catch (parseError) {
-                console.error("❌ Error parseando respuesta:", parseError);
-                alert("❌ Error: respuesta no válida del servidor");
-                return;
+            
+            console.log('Respuesta recibida:', {
+                status: response.status,
+                statusText: response.statusText
+            });
+            
+            const responseData = await response.json().catch(error => {
+                console.error('Error al parsear la respuesta JSON:', error);
+                return { message: 'Error al procesar la respuesta del servidor' };
+            });
+            
+            console.log('Datos de la respuesta:', responseData);
+            
+            if (!response.ok) {
+                console.error('Error en la respuesta del servidor:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData: responseData
+                });
+                
+                let errorMessage = 'Error en la autenticación';
+                if (responseData.details) {
+                    errorMessage += `: ${responseData.details}`;
+                } else if (responseData.message) {
+                    errorMessage = responseData.message;
+                }
+                
+                throw new Error(errorMessage);
             }
-
-            if (res.ok) {
-                // 📌 Guardar token y usuario con rol en localStorage
-                localStorage.setItem('token', data.token); // Guarda el token
-                localStorage.setItem('user', JSON.stringify(data.user)); // Guarda el usuario
-
-                console.log("✅ Usuario logueado:", data.user);
-                console.log(data.token);
-
-                alert('✅ Login exitoso');
-                navigate('/dashboard'); // Ir a la vista de administración
-            } else {
-                alert(`❌ Error: ${data.message || 'Credenciales inválidas o error en el servidor'}`);
-            }
+            
+            // La respuesta ya fue parseada como responseData
+            const data = responseData;
+            
+            // Guardar token y usuario en localStorage
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            console.log("✅ Usuario autenticado:", data.user);
+            
+            // Mostrar mensaje de éxito
+            alert('✅ Login exitoso');
+            
+            // Redirigir al dashboard
+            navigate('/dashboard');
+            
+            return data;
         } catch (error) {
             console.error('Error en login:', error);
             alert('❌ Error en el servidor');

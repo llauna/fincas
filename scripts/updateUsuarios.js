@@ -1,6 +1,6 @@
 // updateUsuarios.js
 const mongoose = require('mongoose');
-const Usuario = require('./src/models/Usuario'); // Ajusta la ruta a tu modelo
+const Usuario = require('../src/models/Usuario'); // Ajusta la ruta a tu modelo
 
 // 🔹 Conexión a MongoDB
 mongoose.connect('mongodb://localhost:27017/Fincas', {

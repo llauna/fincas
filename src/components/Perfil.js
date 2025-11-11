@@ -50,28 +50,73 @@ export default function Perfil({ token }) {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Función para hashear la contraseña en el cliente (compatible con todos los entornos)
+    const simpleHash = (str) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash.toString();
+    };
+
     // Alta de usuario
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.nombre.trim()) return alert("El nombre es obligatorio");
         if (!formData.email.includes('@')) return alert("Email inválido");
         if (formData.password.length < 6) return alert("La contraseña debe tener al menos 6 caracteres");
         if (!formData.rol) return alert("Debe seleccionar un rol");
 
-        axios.post(API_URL, formData, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(() => {
-                alert('✅ Usuario creado correctamente');
-                setFormData({ nombre: '', email: '', password: '', tipo: 'empleado', rol: '' });
-                setShowModal(false);
-                axios.get(API_URL, { headers: { Authorization: `Bearer ${token}` } })
-                    .then(res => setUsuarios(res.data));
-            })
-            .catch(err => {
-                console.error("❌ Error creando usuario:", err);
-                alert('Error al crear usuario');
+        try {
+            // Hashear la contraseña antes de enviarla
+            const hashedPassword = simpleHash(formData.password);
+            
+            // Formatear los datos del usuario para enviar al backend
+            const userData = {
+                nombre: formData.nombre,
+                email: formData.email,
+                password: hashedPassword,
+                tipo: formData.tipo,
+                rol: formData.rol,
+                isPreHashed: true // Bandera para indicar al backend que ya está hasheado
+            };
+            
+            console.log('Enviando datos al servidor (contraseña hasheada):', { ...userData, password: '***' });
+            
+            const response = await axios.post(API_URL, userData, {
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
             });
+
+            if (response.status === 200 || response.status === 201) {
+                alert('✅ Usuario creado correctamente');
+                setFormData({ 
+                    nombre: '', 
+                    email: '', 
+                    password: '', 
+                    tipo: 'empleado', 
+                    rol: '' 
+                });
+                setShowModal(false);
+                
+                // Actualizar la lista de usuarios
+                const res = await axios.get(API_URL, { 
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    } 
+                });
+                setUsuarios(res.data);
+            }
+        } catch (err) {
+            console.error("❌ Error creando usuario:", err);
+            const errorMessage = err.response?.data?.message || 'Error al crear el usuario';
+            alert(`Error: ${errorMessage}`);
+        }
     };
 
     // Eliminar usuario

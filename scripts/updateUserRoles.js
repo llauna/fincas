@@ -1,7 +1,7 @@
 // updateUserRoles.js
 const mongoose = require('mongoose');
-const Usuario = require('./src/models/Usuario'); // Ajusta la ruta si es necesario
-const Rol = require('./src/models/Rol'); // Ajusta la ruta si es necesario
+const Usuario = require('../src/models/Usuario'); // Ajusta la ruta si es necesario
+const Rol = require('../src/models/Rol'); // Ajusta la ruta si es necesario
 
 
 const MONGO_URI = 'mongodb://localhost:27017/Fincas';
