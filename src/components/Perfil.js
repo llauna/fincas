@@ -50,17 +50,6 @@ export default function Perfil({ token }) {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Función para hashear la contraseña en el cliente (compatible con todos los entornos)
-    const simpleHash = (str) => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash.toString();
-    };
-
     // Alta de usuario
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -70,17 +59,13 @@ export default function Perfil({ token }) {
         if (!formData.rol) return alert("Debe seleccionar un rol");
 
         try {
-            // Hashear la contraseña antes de enviarla
-            const hashedPassword = simpleHash(formData.password);
-            
-            // Formatear los datos del usuario para enviar al backend
+
             const userData = {
                 nombre: formData.nombre,
                 email: formData.email,
-                password: hashedPassword,
+                password: formData.password,
                 tipo: formData.tipo,
                 rol: formData.rol,
-                isPreHashed: true // Bandera para indicar al backend que ya está hasheado
             };
             
             console.log('Enviando datos al servidor (contraseña hasheada):', { ...userData, password: '***' });
