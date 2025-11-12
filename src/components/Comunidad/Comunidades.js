@@ -23,13 +23,14 @@ const Comunidades = () => {
     // ✅ URL correcta de tu API
     const API_URL = 'http://localhost:3001/api/comunidades';
 
+    // Paginación y ordenación
+    const [currentPage, setCurrentPage] = useState(1); // Página actual
+    const [itemsPerPage] = useState(5); // Número de elementos por página
+    const [sortConfig, setSortConfig] = useState({ key: 'nombre', direction: 'asc' }); // Configuración de ordenación
+
     useEffect(() => {
         const token = localStorage.getItem('token');
-        console.log('📦 Token en localStorage:', token);
-        console.log('📡 Llamando a:', API_URL);
-
         if (!token) {
-            console.warn('⚠ No hay token, redirigiendo a login...');
             navigate('/login');
             return;
         }
@@ -39,10 +40,8 @@ const Comunidades = () => {
                 const response = await axios.get(API_URL, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log('✅ Datos recibidos:', response.data);
                 setComunidades(response.data);
             } catch (error) {
-                console.error('❌ Error al obtener las comunidades:', error);
                 setFormError(error.response?.data?.message || 'Error al obtener comunidades');
             } finally {
                 setLoading(false);
@@ -59,27 +58,8 @@ const Comunidades = () => {
         e.preventDefault();
         setFormError('');
 
-        const camposClave = {
-            nombre: formData.nombre.trim().toLowerCase(),
-            direccion: formData.direccion.trim().toLowerCase(),
-            cp: formData.cp.trim()
-        };
-
-        const yaExiste = comunidades.some(com =>
-            com.nombre.trim().toLowerCase() === camposClave.nombre &&
-            com.direccion.trim().toLowerCase() === camposClave.direccion &&
-            com.cp === camposClave.cp
-        );
-
-        if (yaExiste && !editMode) {
-            setFormError('❌ Esta comunidad ya está registrada.');
-            return;
-        }
-
+        const token = localStorage.getItem('token');
         try {
-            const token = localStorage.getItem('token');
-            console.log('📡 POST/PUT a:', API_URL, 'con token:', token);
-
             if (editMode) {
                 await axios.put(`${API_URL}/${editId}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -100,16 +80,13 @@ const Comunidades = () => {
             });
             setComunidades(response.data);
         } catch (error) {
-            console.error('❌ Error al guardar la comunidad:', error);
             setFormError(error.response?.data?.message || 'Error al guardar la comunidad.');
         }
     };
 
     const handleEliminar = async (id) => {
+        const token = localStorage.getItem('token');
         try {
-            const token = localStorage.getItem('token');
-            console.log('📡 DELETE a:', `${API_URL}/${id}`, 'con token:', token);
-
             await axios.delete(`${API_URL}/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -119,7 +96,7 @@ const Comunidades = () => {
             });
             setComunidades(response.data);
         } catch (error) {
-            console.error('❌ Error al eliminar la comunidad:', error);
+            console.error('Error al eliminar la comunidad:', error);
         }
     };
 
@@ -138,6 +115,34 @@ const Comunidades = () => {
 
     const handleGoBack = () => {
         navigate(-1);
+    };
+
+    // Ordenar comunidades
+    const sortedComunidades = [...comunidades].sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
+
+    // Obtener comunidades de la página actual
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = sortedComunidades.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Cambiar página
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Cambiar ordenación
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
     };
 
     if (loading) {
@@ -205,16 +210,26 @@ const Comunidades = () => {
             <table className="table table-striped">
                 <thead>
                 <tr>
-                    <th>Nombre</th>
-                    <th>Dirección</th>
-                    <th>Población</th>
-                    <th>CP</th>
-                    <th>Provincia</th>
+                    <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer' }}>
+                        Nombre {sortConfig.key === 'nombre' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('direccion')} style={{ cursor: 'pointer' }}>
+                        Dirección {sortConfig.key === 'direccion' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('poblacion')} style={{ cursor: 'pointer' }}>
+                        Población {sortConfig.key === 'poblacion' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('cp')} style={{ cursor: 'pointer' }}>
+                        CP {sortConfig.key === 'cp' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('provincia')} style={{ cursor: 'pointer' }}>
+                        Provincia {sortConfig.key === 'provincia' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
                     <th>Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
-                {comunidades.map(comunidad => (
+                {currentItems.map(comunidad => (
                     <tr key={comunidad._id}>
                         <td>{comunidad.nombre}</td>
                         <td>{comunidad.direccion}</td>
@@ -229,6 +244,19 @@ const Comunidades = () => {
                 ))}
                 </tbody>
             </table>
+
+            {/* Paginación */}
+            <div className="pagination">
+                {Array.from({ length: Math.ceil(comunidades.length / itemsPerPage) }, (_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => paginate(index + 1)}
+                        className={`btn ${currentPage === index + 1 ? 'btn-primary' : 'btn-secondary'} mx-1`}
+                    >
+                        {index + 1}
+                    </button>
+                ))}
+            </div>
 
             <button onClick={handleGoBack} className="btn btn-secondary mt-3">Volver</button>
         </div>

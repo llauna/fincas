@@ -1,6 +1,7 @@
 //App.js
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Footer from './components/Shared/Footer';
 import Navbar from './components/Shared/Navbar';
 import Login from './components/Usuario/Login/Login';
 import Dashboard from './components/Usuario/Login/Dashboard';
@@ -77,6 +78,7 @@ export default function App()  {
                     <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>
             </div>
+            {!hideNavbar && <Footer />}
         </>
     );
 };

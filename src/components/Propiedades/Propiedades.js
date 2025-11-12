@@ -24,8 +24,13 @@ const Propiedades = ({ propietarioId }) => {
     const [showModal, setShowModal] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const API_PROPIEDADES_URL = 'http://localhost:3001/api/propiedades'; // URL del backend para propiedades
-    const API_PROPIETARIOS_URL = 'http://localhost:3001/api/propietarios'; // URL del backend para propietarios
+    const API_PROPIEDADES_URL = 'http://localhost:3001/api/propiedades';
+    const API_PROPIETARIOS_URL = 'http://localhost:3001/api/propietarios';
+
+    // Paginación y ordenación
+    const [currentPage, setCurrentPage] = useState(1); // Página actual
+    const [itemsPerPage] = useState(5); // Número de elementos por página
+    const [sortConfig, setSortConfig] = useState({ key: 'direccion', direction: 'asc' }); // Configuración de ordenación
 
     useEffect(() => {
         const fetchData = async () => {
@@ -97,6 +102,34 @@ const Propiedades = ({ propietarioId }) => {
         navigate(-1);
     };
 
+    // Ordenar propiedades
+    const sortedPropiedades = [...propiedades].sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
+
+    // Obtener propiedades de la página actual
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = sortedPropiedades.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Cambiar página
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Cambiar ordenación
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
     if (loading) {
         return <div className="container mt-4">Cargando...</div>;
     }
@@ -113,6 +146,7 @@ const Propiedades = ({ propietarioId }) => {
             </div>
         );
     }
+
 
     return (
         <div className="container mt-4">
@@ -267,23 +301,37 @@ const Propiedades = ({ propietarioId }) => {
                 </div>
             )}
 
-            {/* Listado de propiedades */}
+            {/* Listado de propiedades con ordenación */}
             <h2 className="mt-5">Listado de Propiedades</h2>
             <table className="table table-striped">
                 <thead>
                 <tr>
-                    <th>Propietario</th>
-                    <th>Dirección</th>
-                    <th>Número</th>
-                    <th>Población</th>
-                    <th>CP</th>
-                    <th>Planta</th>
-                    <th>Coeficiente</th>
+                    <th onClick={() => handleSort('idPropietario')} style={{ cursor: 'pointer' }}>
+                        Propietario {sortConfig.key === 'idPropietario' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('direccion')} style={{ cursor: 'pointer' }}>
+                        Dirección {sortConfig.key === 'direccion' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('numero')} style={{ cursor: 'pointer' }}>
+                        Número {sortConfig.key === 'numero' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('poblacion')} style={{ cursor: 'pointer' }}>
+                        Población {sortConfig.key === 'poblacion' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('cp')} style={{ cursor: 'pointer' }}>
+                        CP {sortConfig.key === 'cp' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('planta')} style={{ cursor: 'pointer' }}>
+                        Planta {sortConfig.key === 'planta' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
+                    <th onClick={() => handleSort('coeficiente')} style={{ cursor: 'pointer' }}>
+                        Coeficiente {sortConfig.key === 'coeficiente' && (sortConfig.direction === 'asc' ? '🔼' : '🔽')}
+                    </th>
                     <th>Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
-                {propiedades.map(prop => {
+                {currentItems.map(prop => {
                     const propietario = propietariosDisponibles.find(p => p._id === prop.idPropietario);
                     const nombrePropietario = propietario ? propietario.nombre : 'Desconocido';
                     return (
@@ -307,9 +355,23 @@ const Propiedades = ({ propietarioId }) => {
                 </tbody>
             </table>
 
+            {/* Paginación */}
+            <div className="pagination">
+                {Array.from({ length: Math.ceil(propiedades.length / itemsPerPage) }, (_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => paginate(index + 1)}
+                        className={`btn ${currentPage === index + 1 ? 'btn-primary' : 'btn-secondary'} mx-1`}
+                    >
+                        {index + 1}
+                    </button>
+                ))}
+            </div>
+
             <button onClick={handleGoBack} className="btn btn-secondary mt-3">Volver</button>
         </div>
     );
 };
 
 export default Propiedades;
+
