@@ -26,6 +26,8 @@ import EditarUsuario from './components/Usuario/EditarUsuario';
 import ConfiguracionRoles from './components/Roles/ConfiguracionRoles';
 import ListaIncidencias from './components/Incidencias/ListaIncidencias';
 import AbrirIncidencia from './components/Incidencias/AbrirIncidencia';
+import RutaProtegida from './components/Auth/PrivateRoute';
+import Documentacion from './components/Documentacion/Documentacion';
 
 
 export default function App()  {
@@ -75,7 +77,13 @@ export default function App()  {
                     <Route path="/incidencias/abrir/:propietarioId" element={token ? <AbrirIncidencia /> : <Navigate to="/login" />} />
 
                     <Route path="/caja" element={<Caja />} />
+                    <Route path="/documentacion" element={
+                        <RutaProtegida>
+                            <Documentacion />
+                        </RutaProtegida>
+                    } />
                     <Route path="*" element={<Navigate to="/login" />} />
+
                 </Routes>
             </div>
             {!hideNavbar && <Footer />}

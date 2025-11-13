@@ -6,10 +6,10 @@ import { Navigate } from 'react-router-dom';
  * Si no hay token, redirige a /login.
  */
 const PrivateRoute = ({ children }) => {
-    const token = localStorage.getItem('token'); // Ajusta si usas otro método de almacenamiento
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
 
-    if (!token) {
-        // Si no hay token, redirige a login
+    if (!token || !user) {
         return <Navigate to="/login" replace />;
     }
 
