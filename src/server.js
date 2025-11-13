@@ -43,6 +43,7 @@ mongoose.connect('mongodb://localhost:27017/Fincas', {
 });
 
 const db = mongoose.connection;
+
 db.on('error', console.error.bind(console, '❌ Error de conexión:'));
 db.once('open', () => {
     console.log('✅ Conectado a MongoDB');

@@ -22,14 +22,15 @@ function verificarToken(req, res, next) {
 
 // Login de usuario
 router.post('/login', async (req, res) => {
-    const { email, password, isPreHashed } = req.body;
+    const { email, password } = req.body;
     console.log("🔑 Intento de login para:", email);
-    console.log('Modo pre-hasheado:', isPreHashed);
+
 
     try {
-        // Buscar usuario por email
-        console.log('🔍 Buscando usuario con email:', email);
-        const usuario = await Usuario.findOne({ email }).populate('rol');
+
+        const usuario = await Usuario.findOne({ email })
+            .select('+password')
+            .populate('rol');
         
         if (!usuario) {
             console.warn(`⚠ Usuario con email ${email} no encontrado`);
@@ -39,77 +40,36 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        console.log('✅ Usuario encontrado:', {
-            id: usuario._id,
-            email: usuario.email,
-            tienePassword: !!usuario.password,
-            rol: usuario.rol?.nombre || 'Sin rol'
-        });
-
         // Validar contraseña
-        if (!usuario.password) {
-            console.error("❌ El usuario no tiene contraseña almacenada");
-            return res.status(500).json({ message: 'Error en la configuración del usuario' });
-        }
-
-        let esPasswordValida = false;
-
-        // Mostrar información para depuración
-        console.log('🔑 Comparando contraseñas:');
-        console.log('Hash almacenado en BD:', usuario.password);
-        console.log('Contraseña recibida (texto plano):', password);
-
-        // Comparar la contraseña en texto plano con el hash almacenado
-        esPasswordValida = await bcrypt.compare(password, usuario.password);
-
-        // Si la contraseña no coincide, mostrar más detalles para depuración
-        if (!esPasswordValida) {
-            console.log('⚠ La contraseña no coincide');
-            // Verificar si el hash almacenado es un hash bcrypt válido
-            const isBcryptHash = usuario.password.startsWith('$2a$') ||
-                                usuario.password.startsWith('$2b$') ||
-                                usuario.password.startsWith('$2y$');
-            console.log('El hash almacenado es un hash bcrypt válido:', isBcryptHash);
-        }
-
-        console.log("🔑 Contraseña válida:", esPasswordValida);
+        const esPasswordValida = await bcrypt.compare(password, usuario.password);
 
         if (!esPasswordValida) {
-            console.warn("⚠ Contraseña incorrecta para el usuario:", usuario.email);
-            console.log('Hash almacenado en BD:', usuario.password);
-            console.log('Contraseña recibida (posiblemente hasheada):', password);
+            console.warn("⚠ Contraseña incorrecta para el usuario:", email);
             return res.status(400).json({
-                message: 'Credenciales inválidas',
-                details: 'La contraseña es incorrecta'
+                message: 'Credenciales inválidas'
             });
         }
-
-        // Obtener el nombre del rol
-        const rolNombre = usuario.rol?.nombre || 'SinRol';
-        console.log("👤 Rol del usuario:", rolNombre);
 
         // Generar token
         const token = jwt.sign(
             {
                 id: usuario._id,
                 tipo: usuario.tipo,
-                rol: rolNombre
+                rol: usuario.rol?.nombre || 'SinRol'
             },
             process.env.JWT_SECRET || 'secreto',
             { expiresIn: '8h' }
         );
 
-        console.log("✅ Token generado correctamente");
-
-        // Respuesta exitosa
+        // Enviar respuesta sin incluir el password
         res.json({
             token,
-            user: {
+            usuario: {
                 _id: usuario._id,
                 nombre: usuario.nombre,
                 email: usuario.email,
                 tipo: usuario.tipo,
-                rol: rolNombre
+                rol: usuario.rol?.nombre || 'SinRol'
             }
         });
 

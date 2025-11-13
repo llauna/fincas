@@ -9,7 +9,7 @@ const Navbar = () => {
     const user = storedUser ? JSON.parse(storedUser) : null;
 
     const handleLogout = () => {
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');  // Cambiado de 'authToken' a 'token'
         localStorage.removeItem('user');
         navigate('/login');
     };
