@@ -8,6 +8,10 @@ export default function ListaIncidencias() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Email del usuario logeado
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    const userEmail = storedUser?.email ? storedUser.email.toLowerCase() : null;
+
     useEffect(() => {
         const fetchIncidencias = async () => {
             try {
@@ -241,9 +245,9 @@ export default function ListaIncidencias() {
             <div className="card shadow">
                 <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h3 className="mb-0"><i className="bi bi-clipboard2-pulse me-2"></i>Listado de Incidencias</h3>
-                    <button 
+                    <button
                         className="btn btn-light"
-                        onClick={() => navigate('/incidencias/nueva')}
+                        onClick={() => navigate(`/incidencias/abrir/${propietarioId}`)}
                     >
                         <i className="bi bi-plus-circle me-2"></i>Nueva Incidencia
                     </button>
@@ -271,7 +275,7 @@ export default function ListaIncidencias() {
                             <p className="text-muted">Crea tu primera incidencia para comenzar</p>
                             <button 
                                 className="btn btn-primary mt-2"
-                                onClick={() => navigate('/incidencias/nueva')}
+                                onClick={() => navigate(`/incidencias/abrir/${propietarioId}`)}
                             >
                                 <i className="bi bi-plus-circle me-2"></i>Crear Incidencia
                             </button>
@@ -281,9 +285,9 @@ export default function ListaIncidencias() {
                             <table className="table table-hover align-middle">
                                 <thead className="table-light">
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Título</th>
-                                        <th>Descripción</th>
+                                        {/* Quitamos la columna ID */}
+                                        <th style={{ width: '30%' }}>Título</th>
+                                        <th style={{ width: '35%' }}>Descripción</th>
                                         <th>Estado</th>
                                         <th>Gravedad</th>
                                         <th>Reportado por</th>
@@ -291,91 +295,129 @@ export default function ListaIncidencias() {
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
-                                    {incidencias.map((incidencia) => (
-                                        <tr key={incidencia._id} style={{ cursor: 'pointer' }}>
-                                            <td className="text-muted small">
-                                                {incidencia._id?.substring(18, 24) || 'N/A'}
-                                            </td>
-                                            <td>
-                                                <div className="fw-semibold">
-                                                    {incidencia.titulo || 'Sin título'}
-                                                </div>
-                                                <div className="text-muted small">
-                                                    {incidencia.ubicacionEspecifica || 'Sin ubicación'}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="text-truncate" style={{ maxWidth: '250px' }} 
-                                                     title={incidencia.descripcionDetallada}>
-                                                    {incidencia.descripcionDetallada || 'Sin descripción'}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span className={`badge ${getStatusBadge(incidencia.estado)}`}>
-                                                    {incidencia.estado || 'Pendiente'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className={`badge ${
-                                                    incidencia.gravedadImpacto === 'alta' ? 'bg-danger' : 
-                                                    incidencia.gravedadImpacto === 'media' ? 'bg-warning text-dark' : 'bg-info'
-                                                }`}>
-                                                    {incidencia.gravedadImpacto || 'baja'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="d-flex align-items-center">
-                                                    <div className="avatar-sm me-2">
-                                                        <div className="avatar-title bg-light rounded-circle text-primary">
-                                                            <i className="bi bi-person-fill"></i>
+                                {incidencias.map((incidencia) => (
+                                    <tr key={incidencia._id} style={{ cursor: 'pointer' }}>
+                                        {/* Columna Título ampliada y sin "Sin título" */}
+                                        <td style={{ minWidth: '220px' }}>
+                                            <div className="fw-semibold">
+                                                {incidencia.titulo && incidencia.titulo.trim()
+                                                    ? incidencia.titulo
+                                                    : ''}
+                                            </div>
+                                            <div className="text-muted small">
+                                                {incidencia.ubicacionEspecifica || 'Sin ubicación'}
+                                            </div>
+                                        </td>
+
+                                        {/* Columna Descripción más ancha */}
+                                        <td>
+                                            <div
+                                                className="text-truncate"
+                                                style={{ maxWidth: '420px' }}
+                                                title={incidencia.descripcionDetallada}
+                                            >
+                                                {incidencia.descripcionDetallada || 'Sin descripción'}
+                                            </div>
+                                        </td>
+
+                                        {/* Estado */}
+                                        <td>
+                <span className={`badge ${getStatusBadge(incidencia.estado)}`}>
+                    {incidencia.estado || 'Pendiente'}
+                </span>
+                                        </td>
+
+                                        {/* Gravedad */}
+                                        <td>
+                <span
+                    className={`badge ${
+                        incidencia.gravedadImpacto?.toLowerCase() === 'alta'
+                            ? 'bg-danger'
+                            : incidencia.gravedadImpacto?.toLowerCase() === 'media'
+                                ? 'bg-warning text-dark'
+                                : 'bg-info'
+                    }`}
+                >
+                    {incidencia.gravedadImpacto || 'baja'}
+                </span>
+                                        </td>
+
+                                        {/* Reportado por: solo si el correo coincide con el del usuario logeado */}
+                                        <td>
+                                            {(() => {
+                                                const contacto = incidencia.reportadoPor?.contacto || '';
+                                                const correoIncidencia = contacto.toLowerCase();
+
+                                                // Si no hay email de usuario o no coincide, no mostramos nada
+                                                if (!userEmail || correoIncidencia !== userEmail) {
+                                                    return null; // o return '-' si quieres mostrar un guion
+                                                }
+
+                                                return (
+                                                    <div className="d-flex align-items-center">
+                                                        <div className="avatar-sm me-2">
+                                                            <div className="avatar-title bg-light rounded-circle text-primary">
+                                                                <i className="bi bi-person-fill"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="fw-medium">
+                                                                {incidencia.reportadoPor?.nombre || ''}
+                                                            </div>
+                                                            <div className="text-muted small">
+                                                                {incidencia.reportadoPor?.contacto || ''}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <div className="fw-medium">
-                                                            {incidencia.reportadoPor?.nombre || 'Desconocido'}
-                                                        </div>
-                                                        <div className="text-muted small">
-                                                            {incidencia.reportadoPor?.contacto || 'Sin contacto'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="small text-muted">
-                                                    {new Date(incidencia.fechaHoraReporte).toLocaleDateString()}
-                                                </div>
-                                                <div className="small text-muted">
-                                                    {new Date(incidencia.fechaHoraReporte).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="btn-group btn-group-sm">
-                                                    <button 
-                                                        className="btn btn-outline-primary"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            navigate(`/incidencias/${incidencia._id}`);
-                                                        }}
-                                                        title="Ver detalles"
-                                                    >
-                                                        <i className="bi bi-eye"></i>
-                                                    </button>
-                                                    <button 
-                                                        className="btn btn-outline-secondary"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            // Aquí iría la lógica para editar
-                                                        }}
-                                                        title="Editar"
-                                                    >
-                                                        <i className="bi bi-pencil"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                );
+                                            })()}
+                                        </td>
+
+                                        {/* Fecha */}
+                                        <td>
+                                            <div className="small text-muted">
+                                                {new Date(incidencia.fechaHoraReporte).toLocaleDateString()}
+                                            </div>
+                                            <div className="small text-muted">
+                                                {new Date(incidencia.fechaHoraReporte).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
+                                            </div>
+                                        </td>
+
+                                        {/* Acciones */}
+                                        <td>
+                                            <div className="btn-group btn-group-sm">
+                                                <button
+                                                    className="btn btn-outline-primary"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/incidencias/${incidencia._id}`);
+                                                    }}
+                                                    title="Ver detalles"
+                                                >
+                                                    <i className="bi bi-eye"></i>
+                                                </button>
+                                                {/* Botón Modificar para editar la incidencia */}
+                                                <button
+                                                    className="btn btn-outline-secondary"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/incidencias/${incidencia._id}/editar`);
+                                                    }}
+                                                    title="Modificar incidencia"
+                                                >
+                                                    <i className="bi bi-pencil"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
                                 </tbody>
+
                             </table>
                         </div>
                     )}

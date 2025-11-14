@@ -1,14 +1,29 @@
 // src/components/Configuracion.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Roles from './../Roles/Roles';
+import Roles from '../Roles/Roles';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function Configuracion() {
     const navigate = useNavigate();
-    const token = localStorage.getItem('token'); // 🔹 Leer token directamente
+    const [token, setToken] = useState('');
     const rolUsuario = JSON.parse(localStorage.getItem('user'))?.rol || '';
+
+    // Cargar el token al montar el componente
+    useEffect(() => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            // Limpiar el token de posibles comillas adicionales
+            const tokenLimpio = storedToken.replace(/^['"]|['"]$/g, '');
+            console.log('Token limpio en Configuración:', tokenLimpio);
+            setToken(tokenLimpio);
+        } else {
+            console.error('No se encontró el token de autenticación');
+            // Opcional: redirigir al login si no hay token
+            navigate('/login');
+        }
+    }, [navigate]);
     const [tabActiva, setTabActiva] = useState('roles');
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);
@@ -125,7 +140,23 @@ export default function Configuracion() {
 
             {/* Contenido según pestaña */}
             <div className="mt-4">
-                {tabActiva === 'roles' && <Roles token={token} />}
+                {tabActiva === 'roles' && token && (
+                    <div>
+                        <p>Token en Configuración: {token ? 'Presente' : 'Ausente'}</p>
+                        <Roles 
+                            token={token} 
+                            onRolCreado={() => {
+                                // Actualizar la lista de roles cuando se crea uno nuevo
+                                setRolesCargados(false);
+                            }} 
+                        />
+                    </div>
+                )}
+                {tabActiva === 'roles' && !token && (
+                    <div className="alert alert-warning">
+                        Cargando token de autenticación...
+                    </div>
+                )}
 
                 {tabActiva === 'usuarios' && (
                     <div>

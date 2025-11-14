@@ -1,0 +1,28 @@
+
+.configuracion-roles {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.crear-rol {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.roles-existentes {
+    margin-top: 20px;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.alert {
+    margin: 20px 0;
+}

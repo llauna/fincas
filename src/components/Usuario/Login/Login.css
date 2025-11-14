@@ -1,11 +1,78 @@
+/* Contenedor principal */
+body, html, #root {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* Contenedor del login */
+.login-container {
+    display: flex;
+    height: 100vh;
+    background-color: #f8f9fa;
+}
+
+/* Sección de la imagen */
+.login-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: white;
+    text-align: center;
+    background-color: #f0f0f0; /* Color temporal para ver el área */
+}
+
+/* Sección del formulario */
+.login-form-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+    position: relative;
+}
+
 /* Contenedor del formulario */
 .container {
-    max-width: 600px; /* Ajusta el ancho del cuadro */
-    margin: auto;
-    padding: 20px;
+    width: 100%;
+    max-width: 450px;
+    padding: 50px 40px;
     background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin: 0;
+    position: relative;
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 992px) {
+    .login-container {
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    .login-image {
+        padding: 60px 20px;
+        min-height: 40vh;
+    }
+    
+    .login-form-container {
+        padding: 40px 20px;
+        justify-content: flex-start;
+    }
+    
+    .container {
+        max-width: 100%;
+        padding: 30px 20px;
+        top: 0;
+        margin: -30px auto 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
 }
 
 /* Estilo de los labels */

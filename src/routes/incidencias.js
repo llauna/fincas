@@ -1,23 +1,26 @@
+// routes/incidencias.js
 const express = require('express');
 const router = express.Router();
 const Incidencia = require('../models/Incidencias'); // Modelo de la incidencia
+const { verificarToken } = require('../middleware/auth');
 
-// Obtener todas las incidencias
-router.get('/', async (req, res) => {
+// Obtener incidencias SOLO del usuario logeado
+router.get('/', verificarToken, async (req, res) => {
     try {
         console.log('Solicitud recibida para obtener incidencias');
-        const incidencias = await Incidencia.find().populate('reportadoPor', 'nombre email');
-        console.log('Incidencias encontradas:', incidencias.length);
-        
-        // Log the first few incidences for debugging
-        if (incidencias.length > 0) {
-            console.log('Primeras 3 incidencias:', incidencias.slice(0, 3).map(i => ({
-                id: i._id,
-                reportadoPor: i.reportadoPor,
-                descripcion: i.descripcionDetallada
-            })));
+        console.log('Usuario autenticado en incidencias:', req.usuario);
+
+        const emailUsuario = (req.usuario.email || '').toLowerCase();
+        if (!emailUsuario) {
+            return res.status(400).json({ message: 'El token no contiene email de usuario' });
         }
-        
+
+        // Filtrar por el email del usuario logeado
+        const incidencias = await Incidencia.find({
+            'reportadoPor.contacto': emailUsuario
+        });
+
+        console.log(`Incidencias encontradas para ${emailUsuario}:`, incidencias.length);
         res.status(200).json(incidencias);
     } catch (error) {
         console.error('Error al obtener incidencias:', error);

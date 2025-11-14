@@ -4,9 +4,12 @@ const mongoose = require('mongoose');
 const RolSchema = new mongoose.Schema({
     nombre: {
         type: String,
-        enum: ['Administrador', 'Empleado'], // Solo estos roles están permitidos
         required: true,
         unique: true
+    },
+    permisos: {
+        type: [String],
+        default: []
     },
     descripcion: {
         type: String,

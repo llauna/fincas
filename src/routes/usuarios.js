@@ -25,9 +25,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     console.log("🔑 Intento de login para:", email);
 
-
     try {
-
         const usuario = await Usuario.findOne({ email })
             .select('+password')
             .populate('rol');
@@ -55,7 +53,8 @@ router.post('/login', async (req, res) => {
             {
                 id: usuario._id,
                 tipo: usuario.tipo,
-                rol: usuario.rol?.nombre || 'SinRol'
+                rol: usuario.rol?.nombre || 'SinRol',
+                email: usuario.email
             },
             process.env.JWT_SECRET || 'secreto',
             { expiresIn: '8h' }
@@ -85,17 +84,26 @@ router.post('/login', async (req, res) => {
 // Obtener todos los usuarios (solo admin)
 router.get('/', verificarToken, async (req, res) => {
     try {
+        console.log('Solicitud recibida para obtener usuarios');
+        console.log('Usuario autenticado:', req.user);
+
+        // Solo Administrador puede ver la lista
         if (req.user.rol !== 'Administrador') {
-            return res.status(403).json({ message: 'Acceso denegado' });
+            return res.status(403).json({ message: 'Acceso denegado. Se requieren permisos de administrador' });
         }
-        
-        const usuarios = await Usuario.find().select('-password').populate('rol');
-        res.json(usuarios);
+
+        const usuarios = await Usuario.find()
+            .select('-password')
+            .populate('rol');
+
+        console.log('Usuarios encontrados:', usuarios.length);
+
+        res.status(200).json(usuarios);
     } catch (error) {
         console.error('Error al obtener usuarios:', error);
-        res.status(500).json({ 
-            message: 'Error en el servidor', 
-            error: error.message 
+        res.status(500).json({
+            message: 'Error al obtener los usuarios',
+            error: error.message
         });
     }
 });

@@ -13,6 +13,12 @@ const incidenciaSchema = new mongoose.Schema({
         nombre: { type: String, required: true, trim: true },
         contacto: { type: String, required: true, trim: true }
     },
+    // Id del usuario que crea la incidencia (para poder filtrar por usuario logeado)
+    reportadoPorUsuarioId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: true
+    },
     ubicacionEspecifica: { type: String, required: true, trim: true },
     descripcionDetallada: { type: String, required: true, trim: true },
     gravedadImpacto: {

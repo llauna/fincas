@@ -74,7 +74,7 @@ export default function Login() {
 
     return (
         <div className="container mt-5">
-            <div className="row justify-content-center">
+            <div className="row justify-content-center" style={{marginTop: '400px'}}>
                 <div className="col-md-4">
                     <div className="card shadow-sm">
                         <div className="card-body">
@@ -85,32 +85,34 @@ export default function Login() {
                                 </div>
                             )}
                             <form onSubmit={handleLogin}>
-                                <div className="mb-3 d-flex align-items-center">
-                                    <label htmlFor="email" className="form-label me-2">Email</label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        className="form-control flex-grow-1"
-                                        placeholder="Introduce tu email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        style={{ marginLeft: '39px' }}
-                                    />
+                                <div className="mb-3 row align-items-center">
+                                    <label htmlFor="email" className="col-sm-4 col-form-label text-end">Email</label>
+                                    <div className="col-sm-8">
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            className="form-control"
+                                            placeholder="Introduce tu email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                <div className="mb-3 d-flex align-items-center">
-                                    <label htmlFor="password" className="form-label me-2">Contraseña</label>
-                                    <input
-                                        type="password"
-                                        id="password"
-                                        className="form-control flex-grow-1"
-                                        placeholder="Introduce tu contraseña"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        disabled={isLoading}
-                                        style={{ marginLeft: '10px' }}
-                                    />
+                                <div className="mb-3 row align-items-center">
+                                    <label htmlFor="password" className="col-sm-4 col-form-label text-end">Contraseña</label>
+                                    <div className="col-sm-8">
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            className="form-control"
+                                            placeholder="Introduce tu contraseña"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            disabled={isLoading}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="d-grid">
                                     <button

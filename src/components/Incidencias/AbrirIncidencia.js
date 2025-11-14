@@ -47,14 +47,14 @@ export default function AbrirIncidencia() {
                         const errorData = await res.json().catch(() => ({}));
                         throw new Error(errorData.message || 'Error al obtener el propietario');
                     }
-                    
+
                     const propietarioData = await res.json();
                     console.log('Datos del propietario:', propietarioData);
-                    
+
                     if (!propietarioData) {
                         throw new Error('No se recibieron datos del propietario');
                     }
-                    
+
                     setFormData(prev => ({
                         ...prev,
                         reportadoPor: {
@@ -114,7 +114,7 @@ export default function AbrirIncidencia() {
 
             const res = await fetch('http://localhost:3001/api/incidencias', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
@@ -129,12 +129,11 @@ export default function AbrirIncidencia() {
 
             const result = await res.json();
             console.log('Incidencia creada:', result);
-            
+
             alert('Incidencia creada exitosamente');
-            
-            // Redirigir al usuario después de crear la incidencia
-            navigate('/dashboard');
-            
+
+            navigate(`/incidencias/${propietarioId || ''}`);
+
         } catch (error) {
             console.error('Error al crear incidencia:', error);
             setFormError(error.message || 'Error al crear la incidencia. Por favor, intente de nuevo.');

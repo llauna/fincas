@@ -10,7 +10,7 @@ router.get('/', verificarToken, async (req, res) => {
         const roles = await Rol.find();
         res.json(roles);
     } catch (error) {
-        console.error(error);
+        console.error('Error al obtener roles:', error);
         res.status(500).json({ error: 'Error al obtener roles' });
     }
 });
@@ -18,13 +18,47 @@ router.get('/', verificarToken, async (req, res) => {
 // 📌 Crear un nuevo rol
 router.post('/', verificarToken, async (req, res) => {
     try {
-        const { nombre, permisos } = req.body;
-        const nuevoRol = new Rol({ nombre, permisos });
+        const { nombre } = req.body;
+
+        if (!nombre) {
+            return res.status(400).json({
+                error: 'El nombre del rol es requerido',
+                detalles: 'Debe proporcionar un nombre para el rol'
+            });
+        }
+
+        // Normalizar el nombre del rol (primera letra mayúscula, resto minúsculas)
+        const nombreNormalizado = nombre.charAt(0).toUpperCase() + nombre.slice(1).toLowerCase();
+
+        // Verificar si el rol ya existe (ignorando mayúsculas/minúsculas)
+        const rolExistente = await Rol.findOne({
+            nombre: { $regex: new RegExp(`^${nombre}$`, 'i') }
+        });
+
+        if (rolExistente) {
+            return res.status(400).json({
+                error: 'Rol duplicado',
+                detalles: 'Ya existe un rol con ese nombre'
+            });
+        }
+
+        const nuevoRol = new Rol({
+            nombre: nombreNormalizado,
+            permisos: [] // Permisos iniciales vacíos
+        });
+
         await nuevoRol.save();
-        res.status(201).json({ message: '✅ Rol creado correctamente', rol: nuevoRol });
+
+        res.status(201).json({
+            mensaje: '✅ Rol creado correctamente',
+            rol: nuevoRol
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al crear rol' });
+        console.error('Error al crear rol:', error);
+        res.status(500).json({
+            error: 'Error al crear rol',
+            detalles: error.message
+        });
     }
 });
 

@@ -1,117 +1,130 @@
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './ConfiguracionRoles.css';
 
-const API_URL = 'http://localhost:3001/api/usuarios';
-
-const GestionUsuarios = () => {
-    const [usuarios, setUsuarios] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState('empleado');
+function ConfiguracionRoles() {
+    const [roles, setRoles] = useState([]);
+    const [nuevoRol, setNuevoRol] = useState('');
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchUsuarios = async () => {
-            try {
-                const res = await axios.get(API_URL);
-                setUsuarios(res.data);
-            } catch (error) {
-                console.error('Error al obtener usuarios:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUsuarios();
+        cargarRoles();
     }, []);
 
-    const handleRolChange = async (id, nuevoRol, nuevoTipo) => {
+    const cargarRoles = async () => {
         try {
-            await axios.put(`${API_URL}/${id}/rol`, { rol: nuevoRol, tipo: nuevoTipo });
-            setUsuarios(prev =>
-                prev.map(u => u._id === id ? { ...u, rol: nuevoRol, tipo: nuevoTipo } : u)
-            );
+            const response = await axios.get('http://localhost:3001/api/roles', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            setRoles(response.data);
         } catch (error) {
-            console.error('Error al actualizar rol:', error);
+            setError('Error al cargar los roles');
+            console.error('Error:', error);
         }
     };
 
-    if (loading) return <div className="container mt-4">Cargando usuarios...</div>;
+    const crearRol = async (e) => {
+        e.preventDefault();
+        if (!nuevoRol.trim()) {
+            setError('El nombre del rol no puede estar vacío');
+            return;
+        }
 
-    const filtrados = usuarios.filter(u => u.tipo === tab);
+        try {
+            await axios.post('http://localhost:3001/api/roles',
+                {
+                    nombre: nuevoRol,
+                    permisos: [] // Permisos iniciales vacíos
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+            setNuevoRol('');
+            cargarRoles();
+            setError(null);
+        } catch (error) {
+            setError('Error al crear el rol');
+            console.error('Error:', error);
+        }
+    };
+
+    const eliminarRol = async (rolId) => {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este rol?')) {
+            try {
+                await axios.delete(`http://localhost:3001/api/roles/${rolId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                cargarRoles();
+            } catch (error) {
+                setError('Error al eliminar el rol');
+                console.error('Error:', error);
+            }
+        }
+    };
 
     return (
-        <div className="container mt-4">
-            <h1>Gestión de Usuarios</h1>
+        <div className="configuracion-roles">
+            <h2>Gestión de Roles</h2>
 
-            {/* Tabs */}
-            <div className="mb-3">
-                <button
-                    className={`btn ${tab === 'empleado' ? 'btn-primary' : 'btn-outline-primary'} me-2`}
-                    onClick={() => setTab('empleado')}
-                >
-                    Empleados
-                </button>
-                <button
-                    className={`btn ${tab === 'cliente' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setTab('cliente')}
-                >
-                    Clientes
-                </button>
+            {/* Formulario para crear nuevo rol */}
+            <div className="crear-rol">
+                <h3>Crear Nuevo Rol</h3>
+                <form onSubmit={crearRol}>
+                    <div className="input-group mb-3">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Escribe el nombre del nuevo rol"
+                            value={nuevoRol}
+                            onChange={(e) => setNuevoRol(e.target.value)}
+                        />
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                        >
+                            Crear Rol
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            {/* Tabla */}
-            <table className="table table-bordered">
-                <thead className="table-dark">
-                <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Rol</th>
-                    <th>Acciones</th>
-                </tr>
-                </thead>
-                <tbody>
-                {filtrados.map(u => (
-                    <tr key={u._id}>
-                        <td>{u.nombre}</td>
-                        <td>{u.email}</td>
-                        <td>
-                            <select
-                                value={u.rol}
-                                onChange={(e) => handleRolChange(u._id, e.target.value, tab)}
-                                className="form-select"
-                            >
-                                {tab === 'empleado' ? (
-                                    <>
-                                        <option value="admin">Admin</option>
-                                        <option value="gestor">Gestor</option>
-                                        <option value="contable">Contable</option>
-                                    </>
-                                ) : (
-                                    <>
-                                        <option value="cliente">Cliente</option>
-                                        <option value="propietario">Propietario</option>
-                                        <option value="arrendatario">Arrendatario</option>
-                                    </>
-                                )}
-                            </select>
-                        </td>
-                        <td>
+            {/* Mostrar mensaje de error si existe */}
+            {error && (
+                <div className="alert alert-danger" role="alert">
+                    {error}
+                </div>
+            )}
+
+            {/* Lista de roles existentes */}
+            <div className="roles-existentes">
+                <h3>Roles Existentes</h3>
+                <div className="list-group">
+                    {roles.map((rol) => (
+                        <div key={rol._id} className="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{rol.nombre}</span>
+                            <span className="badge bg-primary rounded-pill">
+                                {rol.permisos ? rol.permisos.length : 0} permisos
+                            </span>
                             <button
                                 className="btn btn-danger btn-sm"
-                                onClick={() => console.log('Eliminar usuario', u._id)}
+                                onClick={() => eliminarRol(rol._id)}
                             >
                                 Eliminar
                             </button>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-
-            {/* Botón volver */}
-            <div className="text-center mt-4">
-                <button onClick={handleGoBack} className="btn btn-secondary">Volver</button>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
-};
+}
 
-export default GestionUsuarios;
+export default ConfiguracionRoles;

@@ -1,6 +1,6 @@
 // src/components/Finanzas/Caja.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL_CAJAS = 'http://localhost:3001/api/cajas';
@@ -9,7 +9,6 @@ const API_URL_COMUNIDADES = 'http://localhost:3001/api/comunidades';
 const Caja = () => {
     const { comunidadId } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
 
     const [movimientos, setMovimientos] = useState([]);
     const [comunidades, setComunidades] = useState([]);
@@ -26,10 +25,30 @@ const Caja = () => {
 
     const fetchComunidades = useCallback(async () => {
         try {
-            const res = await axios.get(API_URL_COMUNIDADES);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No se encontró el token de autenticación');
+                return;
+            }
+            
+            console.log('Fetching comunidades from:', API_URL_COMUNIDADES);
+            const res = await axios.get(API_URL_COMUNIDADES, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log('Comunidades recibidas:', res.data);
             setComunidades(res.data);
         } catch (error) {
             console.error('Error al obtener comunidades:', error);
+            console.error('Error details:', error.response?.data);
+            if (error.response?.status === 401) {
+                // Token inválido o expirado, redirigir al login
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
         }
     }, []);
 
@@ -40,10 +59,26 @@ const Caja = () => {
             return;
         }
         try {
-            const response = await axios.get(`${API_URL_CAJAS}/comunidad/${selectedComunidadId}`);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No se encontró el token de autenticación');
+                return;
+            }
+            
+            const response = await axios.get(`${API_URL_CAJAS}/comunidad/${selectedComunidadId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             setMovimientos(response.data);
         } catch (error) {
             console.error('Error al obtener los movimientos de caja:', error);
+            if (error.response?.status === 401) {
+                // Token inválido o expirado, redirigir al login
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
         } finally {
             setLoading(false);
         }
@@ -96,11 +131,10 @@ const Caja = () => {
     };
 
     const handleGoBack = () => {
-        if (location.state?.from) {
-            navigate(location.state.from, { state: { scrollY: location.state.scrollY } });
-        } else {
-            navigate('/dashboard');
-        }
+        // Cerrar cualquier modal abierto
+        setShowModal(false);
+        // Navegar directamente al dashboard
+        navigate('/dashboard', { replace: true });
     };
 
     const calcularSaldo = () => {
@@ -125,9 +159,13 @@ const Caja = () => {
                     onChange={(e) => setSelectedComunidadId(e.target.value)}
                 >
                     <option value="">-- Seleccione una comunidad --</option>
-                    {comunidades.map(c => (
-                        <option key={c._id} value={c._id}>{c.nombre}</option>
-                    ))}
+                    {Array.isArray(comunidades) && comunidades.length > 0 ? (
+                        comunidades.map(c => (
+                            <option key={c._id} value={c._id}>{c.nombre || `Comunidad sin nombre (${c._id})`}</option>
+                        ))
+                    ) : (
+                        <option disabled>No hay comunidades disponibles</option>
+                    )}
                 </select>
             </div>
 
