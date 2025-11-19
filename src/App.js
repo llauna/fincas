@@ -26,6 +26,7 @@ import EditarUsuario from './components/Usuario/EditarUsuario';
 import ConfiguracionRoles from './components/Roles/ConfiguracionRoles';
 import ListaIncidencias from './components/Incidencias/ListaIncidencias';
 import AbrirIncidencia from './components/Incidencias/AbrirIncidencia';
+import EditarIncidencia from './components/Incidencias/EditarIncidencia';
 import RutaProtegida from './components/Auth/PrivateRoute';
 import Documentacion from './components/Documentacion/Documentacion';
 
@@ -69,9 +70,11 @@ export default function App()  {
                     <Route path="/movimientos-globales" element={<ListaMovimientosGlobal />} />
                     <Route path="/movimientos" element={<Movimientos />} />
                     <Route path="/movimientos/:bancoId" element={<Movimientos />} />
+                    <Route path="incidencias" element={token ? <ListaIncidencias  /> : <Navigate to="/login" />} />
 
-                    {/* Ruta para ver incidencias */}
                     <Route path="/incidencias/:propietarioId" element={token ? <ListaIncidencias /> : <Navigate to="/login" />} />
+
+                    <Route path="/incidencias/editar/:id" element={<EditarIncidencia />} />
 
                     {/* Ruta para abrir una nueva incidencia */}
                     <Route path="/incidencias/abrir/:propietarioId" element={token ? <AbrirIncidencia /> : <Navigate to="/login" />} />

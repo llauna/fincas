@@ -10,23 +10,63 @@ router.get('/', verificarToken, async (req, res) => {
         console.log('Solicitud recibida para obtener incidencias');
         console.log('Usuario autenticado en incidencias:', req.usuario);
 
+        const rolUsuario = req.usuario.rol;
         const emailUsuario = (req.usuario.email || '').toLowerCase();
-        if (!emailUsuario) {
-            return res.status(400).json({ message: 'El token no contiene email de usuario' });
+
+        let query = {};
+
+        if (rolUsuario === 'Administrador') {
+            // Admin ve todas las incidencias
+            console.log('Usuario administrador, devolviendo todas las incidencias');
+        } else {
+            // Otros roles: filtrar por su email
+            if (!emailUsuario) {
+                return res.status(400).json({ message: 'El token no contiene email de usuario' });
+            }
+            query = { 'reportadoPor.contacto': emailUsuario };
+            console.log(`Usuario no admin, filtrando incidencias por email: ${emailUsuario}`);
         }
 
-        // Filtrar por el email del usuario logeado
-        const incidencias = await Incidencia.find({
-            'reportadoPor.contacto': emailUsuario
+        const incidencias = await Incidencia
+            .find(query)
+            .populate('comunidad')      // Asegúrate de que el campo exista en el modelo
+            .populate('propietario');   // Idem, campo referencia a propietario
+
+        console.log('Incidencias encontradas:', incidencias.length);
+        incidencias.forEach((i) => {
+            console.log('INCIDENCIA DEBUG:', {
+                id: i._id,
+                comunidad: i.comunidad,
+                propietario: i.propietario,
+            });
         });
 
-        console.log(`Incidencias encontradas para ${emailUsuario}:`, incidencias.length);
         res.status(200).json(incidencias);
     } catch (error) {
         console.error('Error al obtener incidencias:', error);
         res.status(500).json({ message: 'Error al obtener las incidencias', error: error.message });
     }
 });
+
+// 🔹 NUEVA RUTA: obtener una incidencia por ID
+router.get('/:id', verificarToken, async (req, res) => {
+    try {
+        const incidencia = await Incidencia
+            .findById(req.params.id)
+            .populate('comunidad')
+            .populate('propietario');
+
+        if (!incidencia) {
+            return res.status(404).json({ message: 'Incidencia no encontrada' });
+        }
+
+        res.status(200).json(incidencia);
+    } catch (error) {
+        console.error('Error al obtener incidencia por id:', error);
+        res.status(500).json({ message: 'Error al obtener la incidencia', error: error.message });
+    }
+});
+
 
 // Crear una nueva incidencia
 router.post('/', async (req, res) => {

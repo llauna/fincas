@@ -1,34 +1,38 @@
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
+const { Schema } = mongoose;
 
-const incidenciaSchema = new mongoose.Schema({
+const IncidenciaSchema = new Schema({
     idIncidencia: {
         type: String,
         default: () => uuidv4(),
         unique: true,
         trim: true
     },
-    fechaHoraReporte: { type: Date, required: true, default: Date.now },
+    titulo: { type: String, trim: true }, // Campo del primer esquema
+    descripcionDetallada: { type: String, required: true, trim: true },
+    gravedadImpacto: {
+        type: String,
+        enum: ['Baja', 'Media', 'Alta', 'Crítica'], // Enum del segundo esquema
+        required: true
+    },
+    estado: { type: String, default: 'Pendiente' }, // Campo del primer esquema
+    comunidad: { type: Schema.Types.ObjectId, ref: 'Comunidad' }, // Campo del primer esquema
+    propietario: { type: Schema.Types.ObjectId, ref: 'Propietario' }, // Campo del primer esquema
+    proveedorId: { type: Schema.Types.ObjectId, ref: 'Proveedor' }, // Campo del segundo esquema
     reportadoPor: {
         nombre: { type: String, required: true, trim: true },
         contacto: { type: String, required: true, trim: true }
     },
-    // Id del usuario que crea la incidencia (para poder filtrar por usuario logeado)
     reportadoPorUsuarioId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'Usuario',
         required: true
     },
-    ubicacionEspecifica: { type: String, required: true, trim: true },
-    descripcionDetallada: { type: String, required: true, trim: true },
-    gravedadImpacto: {
-        type: String,
-        enum: ['Baja', 'Media', 'Alta', 'Crítica'],
-        required: true
-    },
-    proveedorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Proveedor' } // Nuevo campo
+    ubicacionEspecifica: { type: String, required: true, trim: true }, // Campo del segundo esquema
+    fechaHoraReporte: { type: Date, required: true, default: Date.now }
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('Incidencia', incidenciaSchema);
+module.exports = mongoose.model('Incidencia', IncidenciaSchema);

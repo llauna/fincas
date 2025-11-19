@@ -5,10 +5,11 @@ const Footer = () => {
             backgroundColor: '#2c3e50',
             color: 'white',
             textAlign: 'center',
-            padding: '10px',
+            padding: '10px 16px',
             position: 'fixed',
             bottom: '0',
-            width: '100%'
+            width: '100%',
+            boxSizing: 'border-box'
         }}>
             <p>&copy; 2023 Administración de Fincas. Todos los derechos reservados.</p>
             <p>Contacto: admin@fincas.com | Teléfono: +34 123 456 789</p>

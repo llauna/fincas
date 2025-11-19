@@ -75,15 +75,14 @@ const Navbar = () => {
                             <div className="submenu">
                                 <Link to="/propiedades">Mis Propiedades</Link>
                                 <Link to={`/incidencias/${user._id}`}>Mis Incidencias</Link>
-                                <Link to="/documentos">Mis Documentos</Link>
                             </div>
                         </div>
 
                         <div className="menu">
-                            <span>Incidencias</span>
+                            <span>Documentacion</span>
                             <div className="submenu">
-                                <Link to={`/incidencias/${user._id}`}>Ver Incidencias</Link>
-                                <Link to={`/incidencias/abrir/${user._id}`}>Nueva Incidencia</Link>
+                                <Link to="/documentacion/actas">Actas de Reuniones</Link>
+                                <Link to="/documentacion/estados-financieros">Estados Financieros</Link>
                             </div>
                         </div>
                     </>

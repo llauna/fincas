@@ -1,16 +1,16 @@
-// src/components/Incidencias/AbrirIncidencia.js
+// src/components/Incidencias/EditarIncidencia.js
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAbrirIncidenciaController } from '../../controllers/abrirIncidenciaController';
+import { useEditarIncidenciaController } from '../../controllers/editarIncidenciaController';
 
-export default function AbrirIncidencia() {
+export default function EditarIncidencia() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { formData, handleChange, handleSubmit, loading, error, success } = useAbrirIncidenciaController(id, navigate);
+    const { formData, handleChange, handleSubmit, loading, error, success } = useEditarIncidenciaController(id, navigate);
 
     return (
         <div className="container mt-4">
-            <h3>{id && id !== 'nuevo' ? 'Modificar Incidencia' : 'Nueva Incidencia'}</h3>
+            <h3>Modificar Incidencia</h3>
 
             {error && <div className="alert alert-danger">{error}</div>}
             {success && <div className="alert alert-success">{success}</div>}
@@ -65,7 +65,7 @@ export default function AbrirIncidencia() {
                     </select>
                 </div>
                 <button type="submit" className="btn btn-primary" disabled={loading}>
-                    {loading ? 'Guardando...' : 'Guardar'}
+                    {loading ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
                 <button type="button" className="btn btn-secondary ms-2" onClick={() => navigate(-1)}>
                     Cancelar
